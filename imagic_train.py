@@ -1,4 +1,4 @@
-
+import logging
 import argparse
 import math
 import os
@@ -21,7 +21,7 @@ from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def parse_args():
