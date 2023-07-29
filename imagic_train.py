@@ -8,9 +8,9 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
-
+from accelerate import Accelerator, initialize_accelerator
 from accelerate import Accelerator
-from accelerate.logging import get_logger
+
 from accelerate.utils import set_seed
 from diffusers import AutoencoderKL, DDPMScheduler, StableDiffusionPipeline, UNet2DConditionModel
 from huggingface_hub import HfFolder, Repository, whoami
@@ -132,7 +132,7 @@ def parse_args():
         help="The name of the repository to keep in sync with the local `output_dir`.",
     )
     parser.add_argument(
-        "--logging_dir",
+        "--project_dir",
         type=str,
         default="logs",
         help=(
@@ -188,13 +188,13 @@ def get_full_repo_name(model_id: str, organization: Optional[str] = None, token:
 
 def main():
     args = parse_args()
-    logging_dir = Path(args.output_dir, args.logging_dir)
+    project_dir = Path(args.output_dir, args.project_dir)
 
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
         log_with="tensorboard",
-        logging_dir=logging_dir,
+        project_dir=project_dir,
     )
 
     if args.seed is not None:
