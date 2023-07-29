@@ -8,7 +8,7 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
-from accelerate import Accelerator, initialize_accelerator
+
 from accelerate import Accelerator
 
 from accelerate.utils import set_seed
