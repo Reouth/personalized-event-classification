@@ -119,7 +119,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             target_embeddings = self.text_encoder(text_ids)[0]
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        target_embeddings = target_embeddings.float().to(self.device)
+        target_embeddings = target_embeddings.float()
         return target_embeddings
 
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
@@ -227,7 +227,8 @@ class StableDiffusionPipeline(DiffusionPipeline):
         latents_dtype = cond_embeddings.dtype
         torch.manual_seed(seed)
         input_latents = torch.randn(latents_shape, dtype=latents_dtype).to(self.device)
-
+        print("cond_embeddings device:", cond_embeddings.device)
+        print("input_latents device:", input_latents.device)
         _,latents = self.Imagic_base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
         latents = 1 / 0.18215 * latents
         images = self.vae.decode(latents)
