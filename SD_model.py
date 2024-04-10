@@ -226,7 +226,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         latents_shape = (1, self.unet.in_channels, height // 8, width // 8)
         latents_dtype = cond_embeddings.dtype
         torch.manual_seed(seed)
-        input_latents = torch.randn(latents_shape, dtype=latents_dtype.to(self.device))
+        input_latents = torch.randn(latents_shape, dtype=latents_dtype)
 
         _,latents = self.Imagic_base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
         latents = 1 / 0.18215 * latents
