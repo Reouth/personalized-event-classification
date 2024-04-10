@@ -99,13 +99,18 @@ class StableDiffusionPipeline(DiffusionPipeline):
         scheduler: Union[DDIMScheduler, LMSDiscreteScheduler]):
         super().__init__()
 
+        self.vae = vae
+        self.text_encoder = text_encoder
+        self.tokenizer = tokenizer
+        self.unet = unet
+        self.scheduler = scheduler
     def text_to_embedding(self,target_text):
-        tokenizer = self.tokenizer
-        text_ids = tokenizer(
+
+        text_ids = self.tokenizer(
             target_text,
             padding="max_length",
             truncation=True,
-            max_length=tokenizer.model_max_length,
+            max_length=self.tokenizer.model_max_length,
             return_tensors="pt",
         ).input_ids
 
