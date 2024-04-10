@@ -99,6 +99,22 @@ class StableDiffusionPipeline(DiffusionPipeline):
         scheduler: Union[DDIMScheduler, LMSDiscreteScheduler]):
         super().__init__()
 
+    def text_to_embedding(target_text,device, tokenizer, text_encoder):
+        text_ids = tokenizer(
+            target_text,
+            padding="max_length",
+            truncation=True,
+            max_length=tokenizer.model_max_length,
+            return_tensors="pt",
+        ).input_ids
+
+        text_ids = text_ids.to(device=device)
+        with torch.inference_mode():
+            target_embeddings = text_encoder(text_ids)[0]
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        target_embeddings = target_embeddings.float()
+        return target_embeddings
 
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
         r"""
