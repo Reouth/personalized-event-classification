@@ -99,18 +99,18 @@ class StableDiffusionPipeline(DiffusionPipeline):
         scheduler: Union[DDIMScheduler, LMSDiscreteScheduler]):
         super().__init__()
 
-    def text_to_embedding(target_text,device, tokenizer, text_encoder):
-        text_ids = tokenizer(
+    def text_to_embedding(self,target_text):
+        text_ids = self.tokenizer(
             target_text,
             padding="max_length",
             truncation=True,
-            max_length=tokenizer.model_max_length,
+            max_length=self.tokenizer.model_max_length,
             return_tensors="pt",
         ).input_ids
 
-        text_ids = text_ids.to(device=device)
+        text_ids = text_ids.to(device=self.device)
         with torch.inference_mode():
-            target_embeddings = text_encoder(text_ids)[0]
+            target_embeddings = self.text_encoder(text_ids)[0]
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         target_embeddings = target_embeddings.float()
