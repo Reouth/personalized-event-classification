@@ -3,7 +3,7 @@ from PIL import Image
 
 import torch
 from torch.nn import functional as F
-
+import accelerate
 from typing import List, Optional, Union
 
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
