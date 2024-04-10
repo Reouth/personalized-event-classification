@@ -37,7 +37,7 @@ def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME, device):
     scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False)
 
     logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
-    return vae,tokenizer,text_encoder,unet,scheduler
+    return vae,text_encoder,tokenizer,unet,scheduler
 
 
 def preprocess(image,PIL_INTERPOLATION):
