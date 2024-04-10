@@ -119,7 +119,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             target_embeddings = self.text_encoder(text_ids)[0]
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        target_embeddings = target_embeddings.float()
+        target_embeddings = target_embeddings.float().to(device)
         return target_embeddings
 
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
@@ -157,7 +157,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         num_inference_steps: Optional[int] = 50,
         guidance_scale: float = 7.5,
         ):
-
+        cond_embeddings = cond_embeddings.to(self.device)
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
