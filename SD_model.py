@@ -7,7 +7,7 @@ from torch.nn import functional as F
 from typing import List, Optional, Union
 
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
-from diffusers.pipeline_utils import DiffusionPipeline
+from diffusers import DiffusionPipeline
 
 from diffusers.schedulers import DDIMScheduler, LMSDiscreteScheduler
 from diffusers.utils import logging
