@@ -173,7 +173,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
                 truncation=True,
                 return_tensors="pt",
             )
-            uncond_embeddings = self.text_encoder(uncond_input.input_ids.to(self.device))[0]
+            uncond_embeddings = self.text_encoder(uncond_input.input_ids)[0]
 
             seq_len = uncond_embeddings.shape[1]
             uncond_embeddings = uncond_embeddings.view(1, seq_len, -1)
@@ -193,7 +193,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         loss_avg = AverageMeter()
         for i, t in tqdm(enumerate((timesteps_tensor))):
             # expand the latents if we are doing classifier free guidance
-            noisy_latents = self.scheduler.add_noise(input_latents, noise, t)
+            noisy_latents = self.scheduler.add_noise(input_latents, noise, t).to(self.device)
             latent_model_input = torch.cat([noisy_latents] * 2) if do_classifier_free_guidance else noisy_latents
             if self.scheduler is LMSDiscreteScheduler:
                 sigma = self.scheduler.sigmas[i]
