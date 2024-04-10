@@ -100,11 +100,12 @@ class StableDiffusionPipeline(DiffusionPipeline):
         super().__init__()
 
     def text_to_embedding(self,target_text):
-        text_ids = self.tokenizer(
+        tokenizer = self.tokenizer
+        text_ids = tokenizer(
             target_text,
             padding="max_length",
             truncation=True,
-            max_length=self.tokenizer.model_max_length,
+            max_length=tokenizer.model_max_length,
             return_tensors="pt",
         ).input_ids
 
