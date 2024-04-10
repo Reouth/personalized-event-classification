@@ -20,8 +20,9 @@ from transformers import CLIPTextModel, CLIPTokenizer
 import numpy as np
 from torchvision import transforms
 
+
 # 1. Load the autoencoder model which will be used to decode the latents into image space.
-def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME):
+def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME, device):
     vae = AutoencoderKL.from_pretrained(
     SD_MODEL_NAME, subfolder='vae', use_auth_token=True).to(device)
 
