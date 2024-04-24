@@ -122,10 +122,10 @@ class StableDiffusionPipeline(DiffusionPipeline):
 
         text_ids = text_ids.to(device=self.device)
         with torch.inference_mode():
-            target_embeddings = self.text_encoder(text_ids)[0]
+            target_embeddings = self.text_encoder(text_ids)[0].to(device=self.device)
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        target_embeddings = target_embeddings.float()
+        target_embeddings = target_embeddings.float().to(device=self.device)
         return target_embeddings
 
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
