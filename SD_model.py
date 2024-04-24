@@ -98,12 +98,18 @@ class StableDiffusionPipeline(DiffusionPipeline):
         unet: UNet2DConditionModel,
         scheduler: Union[DDIMScheduler, LMSDiscreteScheduler]):
         super().__init__()
-
-        self.vae = vae
-        self.text_encoder = text_encoder
-        self.tokenizer = tokenizer
-        self.unet = unet
-        self.scheduler = scheduler
+        self.register_modules(
+            vae=vae,
+            text_encoder=text_encoder,
+            tokenizer=tokenizer,
+            unet=unet,
+            scheduler=scheduler
+        )
+        # self.vae = vae
+        # self.text_encoder = text_encoder
+        # self.tokenizer = tokenizer
+        # self.unet = unet
+        # self.scheduler = scheduler
     def text_to_embedding(self,target_text):
 
         text_ids = self.tokenizer(
@@ -157,7 +163,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         num_inference_steps: Optional[int] = 50,
         guidance_scale: float = 7.5,
         ):
-        cond_embeddings = cond_embeddings.to(self.device)
+
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
@@ -173,22 +179,22 @@ class StableDiffusionPipeline(DiffusionPipeline):
                 truncation=True,
                 return_tensors="pt",
             )
-            uncond_embeddings = self.text_encoder(uncond_input.input_ids)[0]
 
+            uncond_embeddings = self.text_encoder(uncond_input.input_ids.to(self.device))[0]
             seq_len = uncond_embeddings.shape[1]
             uncond_embeddings = uncond_embeddings.view(1, seq_len, -1)
 
-            cond_embeddings = torch.cat([uncond_embeddings, cond_embeddings])
+            cond_embeddings = torch.cat([uncond_embeddings, cond_embeddings.to(self.device)])
 
 
         torch.manual_seed(seed)
         self.scheduler.set_timesteps(num_inference_steps)
-        noise = torch.randn_like(input_latents)
+        noise = torch.randn_like(input_latents).to(self.device)
         bsz = input_latents.shape[0]
         timesteps_tensor = self.scheduler.timesteps.to(self.device)
 
-        if self.scheduler is LMSDiscreteScheduler:
-            noisy_latents = input_latents * self.scheduler.sigmas[0]
+        # if self.scheduler is LMSDiscreteScheduler:
+        #     noisy_latents = input_latents * self.scheduler.sigmas[0]
 
         loss_avg = AverageMeter()
         for i, t in tqdm(enumerate((timesteps_tensor))):
@@ -226,9 +232,8 @@ class StableDiffusionPipeline(DiffusionPipeline):
         latents_shape = (1, self.unet.in_channels, height // 8, width // 8)
         latents_dtype = cond_embeddings.dtype
         torch.manual_seed(seed)
-        input_latents = torch.randn(latents_shape, dtype=latents_dtype).to(self.device)
-        print("cond_embeddings device:", cond_embeddings.device)
-        print("input_latents device:", input_latents.device)
+        input_latents = torch.randn(latents_shape, dtype=latents_dtype.to(self.device))
+
         _,latents = self.Imagic_base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
         latents = 1 / 0.18215 * latents
         images = self.vae.decode(latents)
