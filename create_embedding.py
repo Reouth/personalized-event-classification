@@ -1,6 +1,6 @@
 import torch
 import SD_imagic_train
-
+from diffusers import DiffusionPipeline
 from PIL import Image
 
 import torch
@@ -19,7 +19,7 @@ from transformers import CLIPTextModel, CLIPTokenizer
 
 import numpy as np
 from torchvision import transforms
-class embedding_generator():
+class embedding_generator(DiffusionPipeline):
 
     def __init__(
         self,
