@@ -199,7 +199,7 @@ def imagic(pretrained_model_name_or_path,
            learning_rate=2e-6,
            emb_train_steps=2000,
            max_train_steps=4000):
-    # args = parse_args()
+    args = parse_args()
     project_dir = Path(output_dir, args.project_dir)
 
     accelerator = Accelerator(
