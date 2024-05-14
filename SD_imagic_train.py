@@ -213,21 +213,21 @@ def imagic(pretrained_model_name_or_path,
         set_seed(seed)
 
     # Handle the repository creation
-    if accelerator.is_main_process:
-        if args.push_to_hub:
-            if args.hub_model_id is None:
-                repo_name = get_full_repo_name(Path(output_dir).name, token=args.hub_token)
-            else:
-                repo_name = args.hub_model_id
-            repo = Repository(output_dir, clone_from=repo_name)
 
-            with open(os.path.join(output_dir, ".gitignore"), "w+") as gitignore:
-                if "step_*" not in gitignore:
-                    gitignore.write("step_*\n")
-                if "epoch_*" not in gitignore:
-                    gitignore.write("epoch_*\n")
-        elif output_dir is not None:
-            os.makedirs(output_dir, exist_ok=True)
+    if args.push_to_hub:
+        if args.hub_model_id is None:
+            repo_name = get_full_repo_name(Path(output_dir).name, token=args.hub_token)
+        else:
+            repo_name = args.hub_model_id
+        repo = Repository(output_dir, clone_from=repo_name)
+
+        with open(os.path.join(output_dir, ".gitignore"), "w+") as gitignore:
+            if "step_*" not in gitignore:
+                gitignore.write("step_*\n")
+            if "epoch_*" not in gitignore:
+                gitignore.write("epoch_*\n")
+    elif output_dir is not None:
+        os.makedirs(output_dir, exist_ok=True)
 
     # Load the tokenizer
     if args.tokenizer_name:
@@ -329,8 +329,8 @@ def imagic(pretrained_model_name_or_path,
 
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
-    if accelerator.is_main_process:
-        accelerator.init_trackers("imagic", config=vars(args))
+
+    accelerator.init_trackers("imagic", config=vars(args))
 
     def train_loop(pbar, optimizer, params):
         loss_avg = AverageMeter()
@@ -393,16 +393,16 @@ def imagic(pretrained_model_name_or_path,
     train_loop(progress_bar, optimizer, unet.parameters())
 
     # Create the pipeline using using the trained modules and save it.
-    if accelerator.is_main_process:
-        pipeline = StableDiffusionPipeline.from_pretrained(
-            args.pretrained_model_name_or_path,
-            unet=accelerator.unwrap_model(unet),
-            use_auth_token=True
-        )
-        pipeline.save_pretrained(args.output_dir)
 
-        if args.push_to_hub:
-            repo.push_to_hub(commit_message="End of training", blocking=False, auto_lfs_prune=True)
+    pipeline = StableDiffusionPipeline.from_pretrained(
+        args.pretrained_model_name_or_path,
+        unet=accelerator.unwrap_model(unet),
+        use_auth_token=True
+    )
+    pipeline.save_pretrained(output_dir)
+
+    if args.push_to_hub:
+        repo.push_to_hub(commit_message="End of training", blocking=False, auto_lfs_prune=True)
 
     accelerator.end_training()
 
