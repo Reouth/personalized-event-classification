@@ -364,33 +364,33 @@ def main():
         with open(os.path.join(args.output_dir, "target_text.txt"), "w") as f:
             f.write(args.target_text)
 
-    # # Fine tune the diffusion model.
-    # optimizer = optimizer_class(
-    #     accelerator.unwrap_model(unet).parameters(),
-    #     lr=args.learning_rate,
-    #     betas=(args.adam_beta1, args.adam_beta2),
-    #     # weight_decay=args.adam_weight_decay,
-    #     eps=args.adam_epsilon,
-    # )
-    # optimizer = accelerator.prepare(optimizer)
+    # Fine tune the diffusion model.
+    optimizer = optimizer_class(
+        accelerator.unwrap_model(unet).parameters(),
+        lr=args.learning_rate,
+        betas=(args.adam_beta1, args.adam_beta2),
+        # weight_decay=args.adam_weight_decay,
+        eps=args.adam_epsilon,
+    )
+    optimizer = accelerator.prepare(optimizer)
 
-    # progress_bar = tqdm(range(args.max_train_steps), disable=not accelerator.is_local_main_process)
-    # progress_bar.set_description("Fine Tuning")
-    # unet.train()
+    progress_bar = tqdm(range(args.max_train_steps), disable=not accelerator.is_local_main_process)
+    progress_bar.set_description("Fine Tuning")
+    unet.train()
 
-    # train_loop(progress_bar, optimizer, unet.parameters())
+    train_loop(progress_bar, optimizer, unet.parameters())
 
-    # # Create the pipeline using using the trained modules and save it.
-    # if accelerator.is_main_process:
-    #     pipeline = StableDiffusionPipeline.from_pretrained(
-    #         args.pretrained_model_name_or_path,
-    #         unet=accelerator.unwrap_model(unet),
-    #         use_auth_token=True
-    #     )
-    #     pipeline.save_pretrained(args.output_dir)
+    # Create the pipeline using using the trained modules and save it.
+    if accelerator.is_main_process:
+        pipeline = StableDiffusionPipeline.from_pretrained(
+            args.pretrained_model_name_or_path,
+            unet=accelerator.unwrap_model(unet),
+            use_auth_token=True
+        )
+        pipeline.save_pretrained(args.output_dir)
 
-    #     if args.push_to_hub:
-    #         repo.push_to_hub(commit_message="End of training", blocking=False, auto_lfs_prune=True)
+        if args.push_to_hub:
+            repo.push_to_hub(commit_message="End of training", blocking=False, auto_lfs_prune=True)
 
     accelerator.end_training()
 
