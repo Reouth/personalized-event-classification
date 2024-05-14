@@ -70,10 +70,10 @@ class embedding_generator(DiffusionPipeline):
 
         else:
             print("embedding does't exist, generating embedding in folder {}".format(OUTPUT_DIR))
-            SD_imagic_train.imagic(pretrained_model_name_or_path,
-                                OUTPUT_DIR,
-                                image_path,
-                                text,
+            SD_imagic_train.imagic(pretrained_model_name_or_path = pretrained_model_name_or_path,
+                                output_dir=OUTPUT_DIR,
+                                input_image=image_path,
+                                target_text=text,
                                 seed=3434554,
                                 resolution=514,
                                 mixed_precision="fp16",
