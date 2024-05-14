@@ -26,48 +26,48 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
-    parser.add_argument(
-        "--pretrained_model_name_or_path",
-        type=str,
-        default=None,
-        required=True,
-        help="Path to pretrained model or model identifier from huggingface.co/models.",
-    )
+    # parser.add_argument(
+    #     "--pretrained_model_name_or_path",
+    #     type=str,
+    #     default=None,
+    #     required=True,
+    #     help="Path to pretrained model or model identifier from huggingface.co/models.",
+    # )
     parser.add_argument(
         "--tokenizer_name",
         type=str,
         default=None,
         help="Pretrained tokenizer name or path if not the same as model_name",
     )
-    parser.add_argument(
-        "--input_image",
-        type=str,
-        default=None,
-        required=True,
-        help="Path to input image to edit.",
-    )
-    parser.add_argument(
-        "--target_text",
-        type=str,
-        default=None,
-        help="The target text describing the output image.",
-    )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        default="text-inversion-model",
-        help="The output directory where the model predictions and checkpoints will be written.",
-    )
-    parser.add_argument("--seed", type=int, default=None, help="A seed for reproducible training.")
-    parser.add_argument(
-        "--resolution",
-        type=int,
-        default=512,
-        help=(
-            "The resolution for input images, all the images in the train/validation dataset will be resized to this"
-            " resolution"
-        ),
-    )
+    # parser.add_argument(
+    #     "--input_image",
+    #     type=str,
+    #     default=None,
+    #     required=True,
+    #     help="Path to input image to edit.",
+    # )
+    # parser.add_argument(
+    #     "--target_text",
+    #     type=str,
+    #     default=None,
+    #     help="The target text describing the output image.",
+    # )
+    # parser.add_argument(
+    #     "--output_dir",
+    #     type=str,
+    #     default="text-inversion-model",
+    #     help="The output directory where the model predictions and checkpoints will be written.",
+    # )
+    # parser.add_argument("--seed", type=int, default=None, help="A seed for reproducible training.")
+    # parser.add_argument(
+    #     "--resolution",
+    #     type=int,
+    #     default=512,
+    #     help=(
+    #         "The resolution for input images, all the images in the train/validation dataset will be resized to this"
+    #         " resolution"
+    #     ),
+    # )
     parser.add_argument(
         "--center_crop", action="store_true", help="Whether to center crop images before resizing to resolution"
     )
@@ -199,7 +199,7 @@ def imagic(pretrained_model_name_or_path,
            learning_rate=2e-6,
            emb_train_steps=2000,
            max_train_steps=4000):
-    args = parse_args()
+    # args = parse_args()
     project_dir = Path(output_dir, args.project_dir)
 
     accelerator = Accelerator(
@@ -394,8 +394,7 @@ def imagic(pretrained_model_name_or_path,
 
     # Create the pipeline using using the trained modules and save it.
 
-    pipeline = StableDiffusionPipeline.from_pretrained(
-        args.pretrained_model_name_or_path,
+    pipeline = StableDiffusionPipeline.from_pretrained(pretrained_model_name_or_path,
         unet=accelerator.unwrap_model(unet),
         use_auth_token=True
     )
