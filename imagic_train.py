@@ -392,7 +392,7 @@ def main():
     #     if args.push_to_hub:
     #         repo.push_to_hub(commit_message="End of training", blocking=False, auto_lfs_prune=True)
 
-    # accelerator.end_training()
+    accelerator.end_training()
 
 
 if __name__ == "__main__":
