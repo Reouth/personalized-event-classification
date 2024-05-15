@@ -19,20 +19,28 @@ from transformers import CLIPTextModel, CLIPTokenizer
 
 import numpy as np
 from torchvision import transforms
-
+import os
 
 # 1. Load the autoencoder model which will be used to decode the latents into image space.
-def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME, device):
+def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,model_path =None):
+    if model_path is not None:
+        vae_path = os.path.join(model_path,'vae')
+        tokenizer_path = os.path.join(model_path,'tokenizer')
+        text_encoder_path = os.path.join(model_path,'text_encoder')
+        unet_path =   os.path.join(model_path,'unet')
+    else:
+        vae_path = unet_path = SD_MODEL_NAME
+        tokenizer_path = text_encoder_path = CLIP_MODEL_NAME
     vae = AutoencoderKL.from_pretrained(
-    SD_MODEL_NAME, subfolder='vae', use_auth_token=True).to(device)
+    vae_path, subfolder='vae', token=True).to(device)
 
     # 2. Load the tokenizer and text encoder to tokenize and encode the text.
-    tokenizer = CLIPTokenizer.from_pretrained(CLIP_MODEL_NAME)
-    text_encoder = CLIPTextModel.from_pretrained(CLIP_MODEL_NAME).to(device)
+    tokenizer = CLIPTokenizer.from_pretrained(tokenizer_path)
+    text_encoder = CLIPTextModel.from_pretrained(text_encoder_path).to(device)
 
     # 3. The UNet model for generating the latents.
     unet = UNet2DConditionModel.from_pretrained(
-        SD_MODEL_NAME, subfolder='unet', use_auth_token=True).to(device)
+        unet_path, subfolder='unet', token=True).to(device)
 
     scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False)
 
@@ -154,7 +162,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         self.enable_attention_slicing(None)
 
     @torch.no_grad()
-    def Imagic_base_pipeline(self,
+    def base_pipeline(self,
         cond_embeddings,
         input_latents,
         seed:int=0,
@@ -234,7 +242,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         torch.manual_seed(seed)
         input_latents = torch.randn(latents_shape, dtype=latents_dtype).to(self.device)
 
-        _,latents = self.Imagic_base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
+        _,latents = self.base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
         latents = 1 / 0.18215 * latents
         images = self.vae.decode(latents)
 
@@ -283,7 +291,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             input_latents = self.vae.encode(input_image).latent_dist.sample()
             input_latents = 0.18215 * input_latents
 
-        loss_avg,_ = self.Imagic_base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
+        loss_avg,_ = self.base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
 
 
         return  loss_avg
