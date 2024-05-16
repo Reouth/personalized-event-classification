@@ -22,12 +22,12 @@ from torchvision import transforms
 import os
 
 # 1. Load the autoencoder model which will be used to decode the latents into image space.
-def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,model_path =None):
-    if model_path is not None:
-        vae_path = os.path.join(model_path,'vae')
-        tokenizer_path = os.path.join(model_path,'tokenizer')
-        text_encoder_path = os.path.join(model_path,'text_encoder')
-        unet_path =   os.path.join(model_path,'unet')
+def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =False):
+    if imagic_trained:
+        vae_path = os.path.join(SD_MODEL_NAME,'vae')
+        tokenizer_path = os.path.join(SD_MODEL_NAME,'tokenizer')
+        text_encoder_path = os.path.join(SD_MODEL_NAME,'text_encoder')
+        unet_path =   os.path.join(SD_MODEL_NAME,'unet')
     else:
         vae_path = unet_path = SD_MODEL_NAME
         tokenizer_path = text_encoder_path = CLIP_MODEL_NAME
@@ -135,6 +135,49 @@ class StableDiffusionPipeline(DiffusionPipeline):
             torch.cuda.empty_cache()
         target_embeddings = target_embeddings.float().to(device=self.device)
         return target_embeddings
+
+    def image_to_embedding(self,
+            image,
+            height: Optional[int] = 512,
+            width: Optional[int] = 512,
+            resolution: Optional[int] = 512,
+            center_crop: bool = False):
+        if height % 8 != 0 or width % 8 != 0:
+            raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
+        input_image = image
+        image_transforms = transforms.Compose(
+            [
+                transforms.Resize(resolution, interpolation=transforms.InterpolationMode.BILINEAR),
+                transforms.CenterCrop(resolution) if center_crop else transforms.RandomCrop(resolution),
+                transforms.ToTensor(),
+                transforms.Normalize([0.5], [0.5]),
+            ]
+        )
+
+        init_image = image_transforms(input_image)
+        print(init_image.size())
+        init_image = init_image[None].to(device=self.device, dtype=torch.float32)
+        print(init_image.size())
+        with torch.inference_mode():
+            init_latents = self.vae.encode(init_image).latent_dist.sample()
+            init_latents = 0.18215 * init_latents
+            print(init_latents.size())
+        return init_latents
+
+    def upload_imagic_params(self,path,CLIP_model_name):
+        Imagic_params = {}
+        for embed_files in os.listdir(path):
+            imagic_pretrained_path = os.path.join(path, embed_files)
+
+            if os.path.isdir(imagic_pretrained_path):
+                print(f"uploading embeddings for directory: {imagic_pretrained_path}")
+                pretrained_models = SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, self.device,
+                                                                True)
+                target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(self.device)
+                optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(self.device)
+                pipeline = StableDiffusionPipeline(*pretrained_models)
+                Imagic_params[embed_files] = (pipeline,target_embeddings,optimized_embeddings)
+        return Imagic_params
 
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
         r"""
