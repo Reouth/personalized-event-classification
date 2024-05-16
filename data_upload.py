@@ -26,7 +26,7 @@ def upload_images(base_path,class_batch=float('inf'),max_frames = float('inf')):
         if os.path.isdir(item_path):
             print(f"Entering directory: {item_path}")
             # Recursively load images from subdirectories
-            image_data += upload_frames_classes(item_path)
+            image_data += upload_images(item_path)
         elif is_image(item_path):
             # Get the folder name
             folder_name = os.path.basename(base_path)
