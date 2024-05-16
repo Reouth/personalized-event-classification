@@ -12,7 +12,7 @@ def is_image(file_path):
         return False
 
 
-def upload_frames_classes(base_path,class_batch=float('inf'),max_frames = float('inf')):
+def upload_images(base_path,class_batch=float('inf'),max_frames = float('inf')):
     """Recursively load images with their new names into a list."""
     image_data = []  # List to hold image data along with their names
 

@@ -17,7 +17,7 @@ class CLIP_pipline():
 
        def images_to_embeddings(self, path):
               clip_embeddings= {}
-              images = data_upload(path)
+              images = data_upload.upload_images(path)
               for name,img in images:
                      clip_embeddings[name] = self.image_to_embedding(img)
               return clip_embeddings
