@@ -51,6 +51,19 @@ def upload_frames_classes(base_path,class_batch=float('inf'),max_frames = float(
 
     return image_data
 
+def upload_imagic_params(path,CLIP_model_name,device):
+    Imagic_params = {}
+    for embed_files in os.listdir(path):
+        imagic_pretrained_path = os.path.join(path, embed_files)
+        if os.path.isdir(imagic_pretrained_path):
+            print(f"uploading embeddings for directory: {imagic_pretrained_path}")
+            pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
+                                                            True)
+            target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(device)
+            optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(device)
+            pipeline = SD_model.StableDiffusionPipeline(*pretrained_models)
+            Imagic_params[embed_files] = (pipeline,target_embeddings,optimized_embeddings)
+    return Imagic_params
 
 
 

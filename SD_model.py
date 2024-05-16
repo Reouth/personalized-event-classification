@@ -47,7 +47,6 @@ def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =Fals
     logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
     return vae,text_encoder,tokenizer,unet,scheduler
 
-
 def preprocess(image,PIL_INTERPOLATION):
     w, h = image.size
     w, h = map(lambda x: x - x % 32, (w, h))  # resize to integer multiple of 32
@@ -164,20 +163,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             print(init_latents.size())
         return init_latents
 
-    def upload_imagic_params(self,path,CLIP_model_name):
-        Imagic_params = {}
-        for embed_files in os.listdir(path):
-            imagic_pretrained_path = os.path.join(path, embed_files)
 
-            if os.path.isdir(imagic_pretrained_path):
-                print(f"uploading embeddings for directory: {imagic_pretrained_path}")
-                pretrained_models = SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, self.device,
-                                                                True)
-                target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(self.device)
-                optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(self.device)
-                pipeline = StableDiffusionPipeline(*pretrained_models)
-                Imagic_params[embed_files] = (pipeline,target_embeddings,optimized_embeddings)
-        return Imagic_params
 
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
         r"""
