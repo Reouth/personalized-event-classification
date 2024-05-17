@@ -45,7 +45,7 @@ def upload_images(base_path,class_batch=float('inf'),max_frames = float('inf')):
             new_name = f"{folder_name}_{frame_number:03d}.jpg"  # Zero-padded frame number
 
             # Append image data to the list
-            image_data.append((new_name, Image.open(item_path)))
+            image_data.append((new_name, Image.open(item_path),item_path))
         else:
             print(f"Not an image file: {item_path}")
 
