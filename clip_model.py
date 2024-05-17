@@ -22,11 +22,10 @@ class CLIP_pipline():
                      clip_embeddings[name] = self.image_to_embedding(img)
               return clip_embeddings
 
-       def clip_logits_cond_img(self,path,test_image):
-              clip_embeddings = self.images_to_embeddings(path)
+       def conditioned_classifier(self,path,test_image,clip_embeddings):
 
-              img_list = [image_name.replace(".jpg", "") for image_name in clip_embeddings]
-              CLIP_ID_embeds = torch.cat([clip_embeddings[image_name] for image_name in clip_embeddings]).to(
+              embeds_names = list(clip_embeddings.keys())
+              CLIP_ID_embeds = torch.cat([clip_embeddings[embeds_name] for embeds_name in clip_embeddings]).to(
                      self.device)
               CLIP_ID_embeds /= CLIP_ID_embeds.norm(dim=-1, keepdim=True)
 
@@ -35,18 +34,15 @@ class CLIP_pipline():
 
               similarity = (test_embeddings @ CLIP_ID_embeds.T)
               classification = (100.0 * test_embeddings @ CLIP_ID_embeds.T).softmax(dim=-1)
-              print("this is the similarity{}\n this is the classification {} this is clasffication ranked {}".format(similarity[0],classification,classification[0].topk(len(img_list))))
+              unsorted_sim = {}
+              unsorted_classification ={}
+              for cls, sim, index in zip(classification[0], similarity[0], embeds_names):
+                     unsorted_sim[index] = sim.item()
+                     unsorted_classification = classification.item()
 
-              unsorted_CLIP = {}
-              for sim, index in zip(similarity[0], img_list):
-
-                     unsorted_CLIP[index] = sim.item()
-              sorted_CLIP = []
-              sorted_CLIP = sorted(unsorted_CLIP.items(), key=lambda kv: kv[1], reverse=True)
-              # sorted_CLIP[text_list[index]] = value.item()
-
-              print(sorted_CLIP)
-              return sorted_CLIP
+              sorted_sim = sorted(unsorted_sim.items(), key=lambda kv: kv[1], reverse=True)
+              sorted_classification = sorted(unsorted_sim.items(), key=lambda kv: kv[1], reverse=True)
+              return sorted_sim, sorted_classification
 
 
 

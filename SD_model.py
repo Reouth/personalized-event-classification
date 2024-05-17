@@ -20,7 +20,7 @@ from transformers import CLIPTextModel, CLIPTokenizer
 import numpy as np
 from torchvision import transforms
 import os
-
+import gc
 # 1. Load the autoencoder model which will be used to decode the latents into image space.
 def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =False):
     if imagic_trained:
@@ -112,11 +112,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             unet=unet,
             scheduler=scheduler
         )
-        # self.vae = vae
-        # self.text_encoder = text_encoder
-        # self.tokenizer = tokenizer
-        # self.unet = unet
-        # self.scheduler = scheduler
+
     def text_to_embedding(self,target_text):
 
         text_ids = self.tokenizer(
@@ -324,7 +320,41 @@ class StableDiffusionPipeline(DiffusionPipeline):
 
 
         return  loss_avg
+    def conditioned_classifier(self,test_image,imagic_parameters, alpha = 0,
+        seed: int = 0,
+        height: Optional[int] = 512,
+        width: Optional[int] = 512,
+        resolution: Optional[int] = 512,
+        center_crop: bool = False,
+        num_inference_steps: Optional[int] = 50,
+        guidance_scale: float = 7.5):
 
+        SD_loss = {}
+        for embeds_name, params in imagic_parameters.items():
+            pipeline, target_embeddings, optimized_embeddings = params
+            embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+            with torch.autocast("cuda"), torch.inference_mode():
+                loss_avg = pipeline.conditioned_diffusion_loss(
+                    cond_embeddings=embeddings,
+                    image=test_image.convert('RGB'),
+                    seed=seed,
+                    height=height,
+                    width=width,
+                    resolution=resolution,
+                    num_inference_steps=num_inference_steps,
+                    guidance_scale=guidance_scale
+                )
+
+            SD_loss[embeds_name] = (loss_avg.avg.item())
+
+        sorted_SD = sorted(SD_loss.items(), key=lambda kv: kv[1], reverse=True)
+
+        return sorted_SD
 
 
 
