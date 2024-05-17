@@ -266,7 +266,7 @@ def main():
     vae.to(accelerator.device, dtype=weight_dtype)
 
     # Encode the input image.
-    input_image = Image.open(args.input_image).convert("RGB")
+    input_image = args.input_image.convert("RGB")
 
     image_transforms = transforms.Compose(
         [
