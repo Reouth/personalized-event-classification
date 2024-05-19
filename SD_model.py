@@ -21,6 +21,7 @@ import numpy as np
 from torchvision import transforms
 import os
 import gc
+import data_upload
 # 1. Load the autoencoder model which will be used to decode the latents into image space.
 def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =False):
     if imagic_trained:
@@ -46,7 +47,8 @@ def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =Fals
 
     logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
     return vae,text_encoder,tokenizer,unet,scheduler
-def conditioned_classifier(test_image,imagic_parameters, alpha = 0,
+
+def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image, loaded=[],alpha = 0,
     seed: int = 0,
     height: Optional[int] = 512,
     width: Optional[int] = 512,
@@ -55,13 +57,17 @@ def conditioned_classifier(test_image,imagic_parameters, alpha = 0,
     guidance_scale: float = 7.5):
 
     SD_loss = {}
-    for embeds_name, params in imagic_parameters.items():
-        pipeline, target_embeddings, optimized_embeddings = params
-        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+    loaded = []
+    all_files = set(os.listdir(imagic_pretrained_path))
+    while len(loaded) < len(all_files):
 
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device, loaded)
+        pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
+        embeds_name = imagic_parameters[1][-1]
+        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
 
         with torch.autocast("cuda"), torch.inference_mode():
             loss_avg = pipeline.conditioned_diffusion_loss(
