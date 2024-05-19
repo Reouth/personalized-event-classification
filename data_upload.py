@@ -51,11 +51,11 @@ def upload_images(base_path,class_batch=float('inf'),max_frames = float('inf')):
 
     return image_data
 
-def upload_imagic_params(path,CLIP_model_name,loaded,device):
+def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
     Imagic_params = []
-
+    preloaded_files = loaded
     for embed_files in os.listdir(path):
-        if embed_files in loaded:
+        if embed_files in preloaded_files:
             continue
         else:
             imagic_pretrained_path = os.path.join(path, embed_files)
@@ -67,9 +67,9 @@ def upload_imagic_params(path,CLIP_model_name,loaded,device):
                 optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(device)
                 pipeline = SD_model.StableDiffusionPipeline(*pretrained_models)
                 Imagic_params = (pipeline,target_embeddings,optimized_embeddings)
-                loaded = loaded.append(embed_files)
+                preloaded_files = preloaded_files.append(embed_files)
                 break
-    return Imagic_params, loaded
+    return Imagic_params, preloaded_files
 
 
 
