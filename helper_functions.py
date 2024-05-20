@@ -16,8 +16,7 @@ def list_folders_in_directory(directory_path):
 def csv_checkpoint(csv_folder,cls,test_image):
     image_flag =False
     cls_list = list_folders_in_directory(csv_folder)
-
-    filepath = "{}**{}_results.csv".format(cls)
+    filepath = "{}_results.csv".format(cls)
     csv_path = os.path.join(csv_folder, filepath)
     if csv_path in cls_list:
         df_sd = pd.read_csv(csv_path)
