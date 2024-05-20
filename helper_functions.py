@@ -18,7 +18,7 @@ def csv_checkpoint(csv_folder,cls,test_image, pipline= ""):
     cls_list = list_folders_in_directory(csv_folder)
 
     filepath = "{}**{}_results.csv".format(pipline,cls)
-    csv_path = os.join.path(csv_folder, filepath)
+    csv_path = os.path.join(csv_folder, filepath)
     os.makedirs(csv_path, exist_ok=True)
     if csv_path in cls_list:
         df_sd = pd.read_csv(csv_path)
