@@ -55,7 +55,7 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
     resolution: Optional[int] = 512,
     num_inference_steps: Optional[int] = 50,
     guidance_scale: float = 7.5):
-
+    cat_embeds= {}
     SD_loss = {}
     loaded = []
     all_files = set(os.listdir(imagic_pretrained_path))
@@ -71,6 +71,16 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
             pipeline = StableDiffusionPipeline(*pretrained_models)
 
         embeds_name = imagic_parameters[1][-1]
+        embeds_category = embeds_name.rsplit("_",1)[0]
+        if embeds_category in cat_embeds:
+            t_embedding= t_embedding+target_embeddings
+            count +=1
+            O_embedding = O_embedding+optimized_embeddings
+        else:
+            t_embedding =target_embeddings
+            count =0
+            O_embedding = optimized_embeddings
+        cat_embeds[embeds_category] = (count, t_embedding,O_embedding)
         embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
 
         with torch.autocast("cuda"), torch.inference_mode():
@@ -86,10 +96,25 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
             )
 
         SD_loss[embeds_name] = (loss_avg.avg.item())
+    SD_cat_loss = {}
+    for cat_name,embeds in cat_embeds.items():
+        cat_embeddings = (embeds[1]+embeds[2])/count
+        with torch.autocast("cuda"), torch.inference_mode():
+            loss_avg_cat = pipeline.conditioned_diffusion_loss(
+                cond_embeddings=cat_embeddings,
+                image=test_image.convert('RGB'),
+                seed=seed,
+                height=height,
+                width=width,
+                resolution=resolution,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale)
 
-    sorted_SD = sorted(SD_loss.items(), key=lambda kv: kv[1], reverse=True)
+        SD_cat_loss[cat_name] = (loss_avg_cat.avg.item())
+    sorted_cat_SD = sorted(loss_avg_cat.items(), key=lambda kv: kv[1])
+    sorted_SD = sorted(SD_loss.items(), key=lambda kv: kv[1])
 
-    return sorted_SD
+    return sorted_SD, sorted_cat_SD
 
 def preprocess(image,PIL_INTERPOLATION):
     w, h = image.size
