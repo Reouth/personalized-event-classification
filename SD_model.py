@@ -111,10 +111,12 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
                 guidance_scale=guidance_scale)
 
         SD_cat_loss[cat_name] = (loss_avg_cat.avg.item())
-    sorted_cat_SD = sorted(loss_avg_cat.items(), key=lambda kv: kv[1])
-    sorted_SD = sorted(SD_loss.items(), key=lambda kv: kv[1])
+    combined_dict = SD_loss.copy()
+    combined_dict.update(SD_cat_loss)
+    print(combined_dict)
+    sorted_SD = sorted(combined_dict.items(), key=lambda kv: kv[1])
 
-    return sorted_SD, sorted_cat_SD
+    return sorted_SD
 
 def preprocess(image,PIL_INTERPOLATION):
     w, h = image.size
