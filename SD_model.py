@@ -48,7 +48,7 @@ def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =Fals
     logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
     return vae,text_encoder,tokenizer,unet,scheduler
 
-def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_model_name = "",imagic_pipe= True,alpha = 0,
+def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,
     seed: int = 0,
     height: Optional[int] = 512,
     width: Optional[int] = 512,
@@ -60,15 +60,14 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
     loaded = []
     all_files = set(os.listdir(imagic_pretrained_path))
     while len(loaded) < len(all_files):
-
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device, loaded)
         pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
-        if not imagic_pipe:
-            pretrained_models = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
-            pipeline = StableDiffusionPipeline(*pretrained_models)
+        if SD_pretrained_models is not None:
+
+            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
         embeds_name = imagic_parameters[1][-1]
         embeds_category = embeds_name.rsplit("_",1)[0]
