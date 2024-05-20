@@ -48,7 +48,7 @@ def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =Fals
     logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
     return vae,text_encoder,tokenizer,unet,scheduler
 
-def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image, loaded=[],alpha = 0,
+def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_model_name = "",imagic_pipe= True,alpha = 0,
     seed: int = 0,
     height: Optional[int] = 512,
     width: Optional[int] = 512,
@@ -66,6 +66,10 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
             torch.cuda.empty_cache()
         imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device, loaded)
         pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
+        if not imagic_pipe:
+            pretrained_models = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
+            pipeline = StableDiffusionPipeline(*pretrained_models)
+
         embeds_name = imagic_parameters[1][-1]
         embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
 
