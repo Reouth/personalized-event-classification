@@ -38,11 +38,11 @@ class CLIP_pipline():
               unsorted_classification ={}
               for cls, sim, index in zip(classification[0], similarity[0], embeds_names):
                      unsorted_sim[index] = sim.item()
-                     unsorted_classification = classification.item()
+                     # unsorted_classification = classification.item()
 
               sorted_sim = sorted(unsorted_sim.items(), key=lambda kv: kv[1], reverse=True)
-              sorted_classification = sorted(unsorted_classification.items(), key=lambda kv: kv[1], reverse=True)
-              return sorted_sim, sorted_classification
+              # sorted_classification = sorted(unsorted_classification.items(), key=lambda kv: kv[1], reverse=True)
+              return sorted_sim, classification
 
 
 
