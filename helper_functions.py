@@ -13,13 +13,12 @@ def list_folders_in_directory(directory_path):
         print(f"The directory {directory_path} does not exist.")
         return []
 
-def csv_checkpoint(csv_folder,cls,test_image, pipline= ""):
+def csv_checkpoint(csv_folder,cls,test_image):
     image_flag =False
     cls_list = list_folders_in_directory(csv_folder)
 
-    filepath = "{}**{}_results.csv".format(cls,pipline)
+    filepath = "{}**{}_results.csv".format(cls)
     csv_path = os.path.join(csv_folder, filepath)
-    os.makedirs(csv_path, exist_ok=True)
     if csv_path in cls_list:
         df_sd = pd.read_csv(csv_path)
         if test_image in df_sd['GT image name'].unique():
