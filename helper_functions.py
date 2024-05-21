@@ -22,6 +22,7 @@ def csv_checkpoint(csv_folder,cls,test_image):
     print(csv_path)
     if filepath in csv_list:
         df_sd = pd.read_csv(csv_path)
+        print(df_sd.columns)
         if test_image in df_sd['GT image name'].unique():
             image_flag = True
     else:
