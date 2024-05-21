@@ -24,11 +24,24 @@ def csv_checkpoint(csv_folder,cls,test_image):
         df_sd = pd.read_csv(csv_path)
         df_sd = df_sd.drop(columns=['Unnamed: 0'])
         df_sd.columns = [col.strip() for col in df_sd.columns]
-        print(df_sd.columns)
-        if 'GT image name' in list(df_sd.columns):
-            if test_image in df_sd['GT image name'].unique():
-                "test_image: {} already in csv.".format(test_image)
+        # Print exact column names for debugging
+        print("Exact DataFrame columns after stripping spaces:")
+        for col in df_sd.columns:
+            print(f"'{col}'")
+
+        # Check if the column name 'GT Image name' exists in the DataFrame columns
+        if 'GT Image name' in df_sd.columns:
+            if test_image in df_sd['GT Image name'].unique():
+                print(f"test_image: {test_image} already in csv.")
                 image_flag = True
+        else:
+            print("'GT Image name' column is not found in the CSV file.")
+            print("Available columns:", df_sd.columns)
+        # print(df_sd.columns)
+        # if 'GT image name' in list(df_sd.columns):
+        #     if test_image in df_sd['GT image name'].unique():
+        #         "test_image: {} already in csv.".format(test_image)
+        #         image_flag = True
     else:
         df_sd = pd.DataFrame()
     return image_flag, df_sd, csv_path
