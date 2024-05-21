@@ -95,7 +95,7 @@ def multi_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,d
         image =images[0]
         category_folder = os.path.join(output_folder,embeds_category)
         os.makedirs(category_folder, exist_ok=True)
-        image_name = "{}**{}^^{}".format(embeds_name,alpha,guidance_scale)
+        image_name = "{}*alpha:{}^GS:{}.jpg".format(embeds_name,alpha,guidance_scale)
         helper_functions.image_save(image,category_folder,image_name)
     for cat_name,embeds in cat_embeds.items():
         cat_embeddings = (embeds[1]+embeds[2])/count
@@ -109,7 +109,7 @@ def multi_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,d
                     guidance_scale=guidance_scale,
                 )
         image =images[0]
-        image_name = "{}**{}^^{}".format(cat_name,alpha,guidance_scale)
+        image_name = "{}*alpha:{}^GS:{}.jpg".format(cat_name,alpha,guidance_scale)
         helper_functions.image_save(image,category_folder,image_name)
 
 
