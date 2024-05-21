@@ -43,8 +43,7 @@ def csv_checkpoint(csv_folder,cls,test_image):
     else:
         df_sd = pd.DataFrame()
     return image_flag, df_sd, csv_path
-def image_save(numpy_image,image_folder,image_name):
-    image = Image.fromarray(numpy_image)
+def image_save(img,image_folder,image_name):
     os.makedirs(image_folder, exist_ok=True)
     # Save the image
-    image.save(os.path.join(image_folder, image_name))
+    img.save(os.path.join(image_folder, image_name))
