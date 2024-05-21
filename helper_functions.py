@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from PIL import Image
 def list_csv_files_in_directory(directory_path):
     try:
         # List all items in the directory
@@ -24,10 +25,7 @@ def csv_checkpoint(csv_folder,cls,test_image):
         df_sd = pd.read_csv(csv_path)
         df_sd = df_sd.drop(columns=['Unnamed: 0'])
         df_sd.columns = [col.strip() for col in df_sd.columns]
-        # Print exact column names for debugging
-        print("Exact DataFrame columns after stripping spaces:")
-        for col in df_sd.columns:
-            print(f"'{col}'")
+
 
         # Check if the column name 'GT Image name' exists in the DataFrame columns
         if 'GT Image name' in df_sd.columns:
@@ -45,3 +43,8 @@ def csv_checkpoint(csv_folder,cls,test_image):
     else:
         df_sd = pd.DataFrame()
     return image_flag, df_sd, csv_path
+def image_save(numpy_image,image_folder,image_name):
+    image = Image.fromarray(numpy_image)
+    os.makedirs(image_folder, exist_ok=True)
+    # Save the image
+    image.save(os.path.join(image_folder, image_name))
