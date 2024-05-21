@@ -23,6 +23,9 @@ import os
 import gc
 import data_upload
 # 1. Load the autoencoder model which will be used to decode the latents into image space.
+import helper_functions
+
+
 def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =False):
     if imagic_trained:
         vae_path = os.path.join(SD_MODEL_NAME,'vae')
@@ -48,6 +51,68 @@ def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =Fals
     logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
     return vae,text_encoder,tokenizer,unet,scheduler
 
+def multi_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,SD_pretrained_models=None,alpha = 0,
+    seed: int = 0,
+    height: Optional[int] = 512,
+    width: Optional[int] = 512,
+    num_inference_steps: Optional[int] = 50,
+    guidance_scale: float = 7.5):
+    cat_embeds= {}
+    loaded = []
+    all_files = set(os.listdir(imagic_pretrained_path))
+    while len(loaded) < len(all_files):
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device, loaded)
+        pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
+        loaded = imagic_parameters[1]
+        if SD_pretrained_models is not None:
+            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
+
+        embeds_name = loaded[-1]
+        embeds_category = embeds_name.rsplit("_",1)[0]
+        if embeds_category in cat_embeds:
+            t_embedding= t_embedding+target_embeddings
+            count +=1
+            O_embedding = O_embedding+optimized_embeddings
+        else:
+            t_embedding =target_embeddings
+            count =0
+            O_embedding = optimized_embeddings
+        cat_embeds[embeds_category] = (count, t_embedding,O_embedding)
+        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+
+        with torch.autocast("cuda"), torch.inference_mode():
+            images = pipeline.generateImage(
+                    cond_embeddings = embeddings,
+                    seed=seed,
+                    height = height,
+                    width=width,
+                    num_inference_steps=num_inference_steps,
+                    guidance_scale=guidance_scale,
+                )
+        image =images[0]
+        category_folder = os.path.join(output_folder,embeds_category)
+        os.makedirs(category_folder, exist_ok=True)
+        image_name = "{}**{}^^{}".format(embeds_name,alpha,guidance_scale)
+        helper_functions.image_save(image,category_folder,image_name)
+    for cat_name,embeds in cat_embeds.items():
+        cat_embeddings = (embeds[1]+embeds[2])/count
+        with torch.autocast("cuda"), torch.inference_mode():
+            images = pipeline.generateImage(
+                    cond_embeddings = cat_embeddings,
+                    seed=seed,
+                    height = height,
+                    width=width,
+                    num_inference_steps=num_inference_steps,
+                    guidance_scale=guidance_scale,
+                )
+        image =images[0]
+        image_name = "{}**{}^^{}".format(cat_name,alpha,guidance_scale)
+        helper_functions.image_save(image,category_folder,image_name)
+
+
 def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,
     seed: int = 0,
     height: Optional[int] = 512,
@@ -65,11 +130,12 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
             torch.cuda.empty_cache()
         imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device, loaded)
         pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
+        loaded = imagic_parameters[1]
         if SD_pretrained_models is not None:
 
             pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
-        embeds_name = imagic_parameters[1][-1]
+        embeds_name = loaded[-1]
         embeds_category = embeds_name.rsplit("_",1)[0]
         if embeds_category in cat_embeds:
             t_embedding= t_embedding+target_embeddings
