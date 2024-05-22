@@ -71,6 +71,12 @@ def multi_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,d
             pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
         embeds_name = loaded[-1]
+        category_folder = os.path.join(output_folder,embeds_category)
+        os.makedirs(category_folder, exist_ok=True)
+        image_name = "{}*alpha:{}^GS:{}.jpg".format(embeds_name,alpha,guidance_scale)
+
+
+
         embeds_category = embeds_name.rsplit("_",1)[0]
         if embeds_category in cat_embeds:
             t_embedding= t_embedding+target_embeddings
@@ -82,35 +88,35 @@ def multi_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,d
             O_embedding = optimized_embeddings
         cat_embeds[embeds_category] = (count, t_embedding,O_embedding)
         embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+        if not helper_functions.generated_image_checkpoint(output_folder,image_name):
+            with torch.autocast("cuda"), torch.inference_mode():
+                images = pipeline.generateImage(
+                        cond_embeddings = embeddings,
+                        seed=seed,
+                        height = height,
+                        width=width,
+                        num_inference_steps=num_inference_steps,
+                        guidance_scale=guidance_scale,
+                    )
+            image =images[0]
 
-        with torch.autocast("cuda"), torch.inference_mode():
-            images = pipeline.generateImage(
-                    cond_embeddings = embeddings,
-                    seed=seed,
-                    height = height,
-                    width=width,
-                    num_inference_steps=num_inference_steps,
-                    guidance_scale=guidance_scale,
-                )
-        image =images[0]
-        category_folder = os.path.join(output_folder,embeds_category)
-        os.makedirs(category_folder, exist_ok=True)
-        image_name = "{}*alpha:{}^GS:{}.jpg".format(embeds_name,alpha,guidance_scale)
-        helper_functions.image_save(image,category_folder,image_name)
+            helper_functions.image_save(image,category_folder,image_name)
     for cat_name,embeds in cat_embeds.items():
-        cat_embeddings = (embeds[1]+embeds[2])/count
-        with torch.autocast("cuda"), torch.inference_mode():
-            images = pipeline.generateImage(
-                    cond_embeddings = cat_embeddings,
-                    seed=seed,
-                    height = height,
-                    width=width,
-                    num_inference_steps=num_inference_steps,
-                    guidance_scale=guidance_scale,
-                )
-        image =images[0]
         image_name = "{}*alpha:{}^GS:{}.jpg".format(cat_name,alpha,guidance_scale)
-        helper_functions.image_save(image,category_folder,image_name)
+        if not helper_functions.generated_image_checkpoint(output_folder,image_name):
+            cat_embeddings = (embeds[1]+embeds[2])/count
+            with torch.autocast("cuda"), torch.inference_mode():
+                images = pipeline.generateImage(
+                        cond_embeddings = cat_embeddings,
+                        seed=seed,
+                        height = height,
+                        width=width,
+                        num_inference_steps=num_inference_steps,
+                        guidance_scale=guidance_scale,
+                    )
+            image =images[0]
+
+            helper_functions.image_save(image,category_folder,image_name)
 
 
 def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,

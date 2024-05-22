@@ -43,6 +43,24 @@ def csv_checkpoint(csv_folder,cls,test_image):
     else:
         df_sd = pd.DataFrame()
     return image_flag, df_sd, csv_path
+
+
+def generated_image_checkpoint(base_path,image_name):
+    """Recursively load images with their new names into a list."""
+    flag = False
+
+    for item in os.listdir(base_path):
+        item_path = os.path.join(base_path, item)
+
+        if os.path.isdir(item_path):
+            print(f"Entering directory: {item_path}")
+            # Recursively load images from subdirectories
+            generated_image_checkpoint(item_path)
+        elif item is image_name:
+            flag = True
+            print("imaged {} already generated".format(image_name))
+    return flag
+
 def image_save(img,image_folder,image_name):
     os.makedirs(image_folder, exist_ok=True)
     # Save the image
