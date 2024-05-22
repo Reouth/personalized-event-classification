@@ -55,7 +55,7 @@ def generated_image_checkpoint(base_path,image_name):
         if os.path.isdir(item_path):
             print(f"Entering directory: {item_path}")
             # Recursively load images from subdirectories
-            generated_image_checkpoint(item_path)
+            generated_image_checkpoint(base_path,item_path)
         elif item is image_name:
             flag = True
             print("imaged {} already generated".format(image_name))
