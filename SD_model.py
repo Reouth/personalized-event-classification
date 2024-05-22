@@ -71,13 +71,12 @@ def multi_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,d
             pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
         embeds_name = loaded[-1]
-        category_folder = os.path.join(output_folder,embeds_category)
-        os.makedirs(category_folder, exist_ok=True)
         image_name = "{}*alpha:{}^GS:{}.jpg".format(embeds_name,alpha,guidance_scale)
 
-
-
         embeds_category = embeds_name.rsplit("_",1)[0]
+        category_folder = os.path.join(output_folder, embeds_category)
+        os.makedirs(category_folder, exist_ok=True)
+
         if embeds_category in cat_embeds:
             t_embedding= t_embedding+target_embeddings
             count +=1
@@ -87,8 +86,10 @@ def multi_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,d
             count =0
             O_embedding = optimized_embeddings
         cat_embeds[embeds_category] = (count, t_embedding,O_embedding)
-        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+
+
         if not helper_functions.generated_image_checkpoint(output_folder,image_name):
+            embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
             with torch.autocast("cuda"), torch.inference_mode():
                 images = pipeline.generateImage(
                         cond_embeddings = embeddings,
