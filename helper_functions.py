@@ -49,6 +49,7 @@ def generated_image_checkpoint(embeds_path,image_path,alpha,guidance_scale):
         image_name = "{}*alpha:{}^GS:{}.jpg".format(embed_files,alpha,guidance_scale)
         embeds_category = embed_files.rsplit("_",1)[0]
         category_folder = os.path.join(image_path, embeds_category)
+        os.makedirs(category_folder, exist_ok=True)
         return image_check(category_folder, image_name)
 
 def image_check(base_path, image_name):
@@ -67,8 +68,3 @@ def image_check(base_path, image_name):
             print("image {} already generated".format(image_name))
     return flag,item_path
 
-
-def image_save(img,image_folder,image_name):
-    os.makedirs(image_folder, exist_ok=True)
-    # Save the image
-    img.save(os.path.join(image_folder, image_name))
