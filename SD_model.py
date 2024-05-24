@@ -102,47 +102,6 @@ def image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,
         image.save(os.path.join(cat_path, cat_name)
     return image_checkpoint
 
-def category_image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,SD_pretrained_models=None,alpha = 0,
-    seed: int = 0,
-    height: Optional[int] = 512,
-    width: Optional[int] = 512,
-    num_inference_steps: Optional[int] = 50,
-    guidance_scale: float = 7.5):
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    checkpoint, image_path = helper_functions.generated_image_checkpoint(imagic_pretrained_path, output_folder, alpha, guidance_scale)
-    cat_path, image_name = image_path.rsplit("/",1)
-
-
-    if checkpoint:
-        return checkpoint
-    else:
-        imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device)
-        pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
-        loaded = imagic_parameters[1]
-        if SD_pretrained_models is not None:
-            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
-
-        embeds_name = loaded[-1]
-        embeds_category = embeds_name.rsplit("_",1)[0]
-        category_folder = os.path.join(output_folder, embeds_category)
-        os.makedirs(category_folder, exist_ok=True)
-        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
-        with torch.autocast("cuda"), torch.inference_mode():
-            images = pipeline.generateImage(
-                    cond_embeddings = embeddings,
-                    seed=seed,
-                    height = height,
-                    width=width,
-                    num_inference_steps=num_inference_steps,
-                    guidance_scale=guidance_scale,
-                )
-        image =images[0]
-        image.save(os.path.join(category_folder, image_path)
-        return False
-
-
 
 def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,
     seed: int = 0,
