@@ -53,7 +53,7 @@ def generated_image_checkpoint(embeds_path,image_path,alpha,guidance_scale):
         return image_check(category_folder, image_name)
 
 def image_check(base_path, image_name):
-
+    item_path=""
     flag = False
 
     for item in os.listdir(base_path):
