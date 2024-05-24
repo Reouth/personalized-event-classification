@@ -85,7 +85,7 @@ def image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,
                 )
         image =images[0]
         image.save(os.path.join(cat_path, image_name))
-    elif not cat_checkpoint:
+    elif not cat_checkpoint and SD_pretrained_models is not None:
         pipeline = StableDiffusionPipeline(*SD_pretrained_models)
         target_embeddings,optimized_embeddings,count = data_upload.upload_cat_embeds(imagic_pretrained_path, cat_name, CLIP_model_name, device)
         embeddings =  (target_embeddings * optimized_embeddings)/count
