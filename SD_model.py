@@ -99,7 +99,7 @@ def image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,
                 guidance_scale=guidance_scale,
             )
         image = images[0]
-        image.save(os.path.join(cat_path, cat_name)
+        image.save(os.path.join(cat_path, cat_name))
     return image_checkpoint
 
 
