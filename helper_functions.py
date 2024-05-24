@@ -44,10 +44,15 @@ def csv_checkpoint(csv_folder,cls,test_image):
         df_sd = pd.DataFrame()
     return image_flag, df_sd, csv_path
 
+def generated_image_checkpoint(embeds_path,image_path,alpha,guidance_scale):
+    for embed_files in os.listdir(embeds_path):
+        image_name = "{}*alpha:{}^GS:{}.jpg".format(embed_files,alpha,guidance_scale)
+        embeds_category = embed_files.rsplit("_",1)[0]
+        category_folder = os.path.join(image_path, embeds_category)
+        return image_check(category_folder, image_name)
 
+def image_check(base_path, image_name):
 
-def generated_image_checkpoint(base_path, image_name):
-    """Recursively load images with their new names into a list."""
     flag = False
 
     for item in os.listdir(base_path):
@@ -60,7 +65,7 @@ def generated_image_checkpoint(base_path, image_name):
         elif item == image_name:
             flag = True
             print("image {} already generated".format(image_name))
-    return flag
+    return flag,item_path
 
 
 def image_save(img,image_folder,image_name):

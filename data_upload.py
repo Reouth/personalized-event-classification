@@ -71,6 +71,20 @@ def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
                 break
     return Imagic_params, loaded
 
+ def upload_cat_embeds(path, embeds_category,CLIP_model_name,device):
+     loaded = []
+     for embeds in os.listdir(path):
+         Imagic_params, loaded = upload_imagic_params(path, CLIP_model_name, device,loaded)
+         pipeline, target_embeddings, optimized_embeddings = Imagic_params
+        if embeds_category in embeds:
+            t_embedding = t_embedding + target_embeddings
+            count += 1
+            O_embedding = O_embedding + optimized_embeddings
+        else:
+            t_embedding = target_embeddings
+            count = 0
+            O_embedding = optimized_embeddings
+     return t_embedding, O_embedding,count
 
 
 
