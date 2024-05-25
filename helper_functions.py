@@ -50,7 +50,8 @@ def generated_image_checkpoint(embeds_path,image_path,alpha,guidance_scale):
         embeds_category = embed_files.rsplit("_",1)[0]
         category_folder = os.path.join(image_path, embeds_category)
         os.makedirs(category_folder, exist_ok=True)
-        return image_check(category_folder, image_name),embed_files
+        flag, item_path = image_check(category_folder, image_name)
+        return flag, item_path,embed_files
 
 def image_check(base_path, image_name):
     item_path=""
