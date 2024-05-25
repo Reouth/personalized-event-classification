@@ -73,7 +73,7 @@ def image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             imagic_parameters,loaded = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device,loaded)
-            pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
+            pipeline, target_embeddings, optimized_embeddings = imagic_parameters
             if SD_pretrained_models is not None:
                 pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
