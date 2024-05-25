@@ -57,50 +57,54 @@ def image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,
     width: Optional[int] = 512,
     num_inference_steps: Optional[int] = 50,
     guidance_scale: float = 7.5):
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    image_checkpoint, image_path = helper_functions.generated_image_checkpoint(imagic_pretrained_path, output_folder, alpha, guidance_scale)
-    cat_path, image_name = image_path.rsplit("/",1)
-    cat_name = image_name.rsplit("_",1)[0]
-    cat_checkpoint,cat_image_path = helper_functions.image_check(cat_path, cat_name)
-    if image_checkpoint and cat_checkpoint:
-        return image_checkpoint
-    elif not image_checkpoint:
+    loaded = []
+    all_files = set(os.listdir(imagic_pretrained_path))
+    while len(loaded) < len(all_files):
+        image_checkpoint, image_path,embeds_name = helper_functions.generated_image_checkpoint(imagic_pretrained_path, output_folder, alpha, guidance_scale)
+        cat_path, image_name = image_path.rsplit("/",1)
+        cat_name = embeds_name.rsplit("_",1)[0]
+        cat_name = "{}*alpha:{}^GS:{}.jpg".format(cat_name,alpha,guidance_scale)
+        cat_checkpoint,cat_image_path = helper_functions.image_check(cat_path, cat_name)
         os.makedirs(cat_path, exist_ok=True)
-        imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device)
-        pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
-        if SD_pretrained_models is not None:
-            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
+        if image_checkpoint and cat_checkpoint:
+            loaded.append(embeds_name)
+        elif not image_checkpoint:
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            imagic_parameters,loaded = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device,loaded)
+            pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
+            if SD_pretrained_models is not None:
+                pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
-        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
-        with torch.autocast("cuda"), torch.inference_mode():
-            images = pipeline.generateImage(
-                    cond_embeddings = embeddings,
+            embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+            with torch.autocast("cuda"), torch.inference_mode():
+                images = pipeline.generateImage(
+                        cond_embeddings = embeddings,
+                        seed=seed,
+                        height = height,
+                        width=width,
+                        num_inference_steps=num_inference_steps,
+                        guidance_scale=guidance_scale,
+                    )
+            image =images[0]
+            image.save(os.path.join(cat_path, image_name))
+        elif not cat_checkpoint and SD_pretrained_models is not None:
+            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
+            target_embeddings,optimized_embeddings,count = data_upload.upload_cat_embeds(imagic_pretrained_path, cat_name, CLIP_model_name, device,loaded=[])
+            embeddings =  (target_embeddings * optimized_embeddings)/count
+            with torch.autocast("cuda"), torch.inference_mode():
+                images = pipeline.generateImage(
+                    cond_embeddings=embeddings,
                     seed=seed,
-                    height = height,
+                    height=height,
                     width=width,
                     num_inference_steps=num_inference_steps,
                     guidance_scale=guidance_scale,
                 )
-        image =images[0]
-        image.save(os.path.join(cat_path, image_name))
-    elif not cat_checkpoint and SD_pretrained_models is not None:
-        pipeline = StableDiffusionPipeline(*SD_pretrained_models)
-        target_embeddings,optimized_embeddings,count = data_upload.upload_cat_embeds(imagic_pretrained_path, cat_name, CLIP_model_name, device)
-        embeddings =  (target_embeddings * optimized_embeddings)/count
-        with torch.autocast("cuda"), torch.inference_mode():
-            images = pipeline.generateImage(
-                cond_embeddings=embeddings,
-                seed=seed,
-                height=height,
-                width=width,
-                num_inference_steps=num_inference_steps,
-                guidance_scale=guidance_scale,
-            )
-        image = images[0]
-        image.save(os.path.join(cat_path, cat_name))
-    return image_checkpoint
+            image = images[0]
+            image.save(os.path.join(cat_path, cat_name))
+        return image_checkpoint
 
 
 def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,
