@@ -59,13 +59,16 @@ def image_generator(output_folder,imagic_pretrained_path,CLIP_model_name,device,
     guidance_scale: float = 7.5):
     loaded = []
     all_files = set(os.listdir(imagic_pretrained_path))
+    print(all_files)
     while len(loaded) < len(all_files):
         image_checkpoint, image_path,embeds_name = helper_functions.generated_image_checkpoint(imagic_pretrained_path, output_folder, alpha, guidance_scale)
-        print(image_path)
         cat_path, image_name = image_path.rsplit("/",1)
         cat_name = embeds_name.rsplit("_",1)[0]
         cat_name = "{}*alpha:{}^GS:{}.jpg".format(cat_name,alpha,guidance_scale)
         cat_checkpoint,cat_image_path = helper_functions.image_check(cat_path, cat_name)
+        print("image_checkpoint {} image path {} image name {}".format(image_checkpoint, image_path,embeds_name))
+        print("category_checkpoint {} category path {} ".format(cat_checkpoint, cat_image_path))
+
         os.makedirs(cat_path, exist_ok=True)
         if image_checkpoint and cat_checkpoint:
             loaded.append(embeds_name)
@@ -128,7 +131,6 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
         pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
         loaded = imagic_parameters[1]
         if SD_pretrained_models is not None:
-
             pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
         embeds_name = loaded[-1]
@@ -394,7 +396,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
     ):
 
         # get the initial random noise unless the user supplied it
-        latents_shape = (1, self.unet.in_channels, height // 8, width // 8)
+        latents_shape = (1, self.unet.config.in_channels, height // 8, width // 8)
         latents_dtype = cond_embeddings.dtype
         torch.manual_seed(seed)
         input_latents = torch.randn(latents_shape, dtype=latents_dtype).to(self.device)
