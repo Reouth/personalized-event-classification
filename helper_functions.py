@@ -48,14 +48,14 @@ def csv_checkpoint(csv_folder,cls,test_image):
         df_sd = pd.DataFrame()
     return image_flag, df_sd, csv_path
 
-def generated_image_checkpoint(embeds_path,image_path,alpha,guidance_scale):
-    for embed_files in os.listdir(embeds_path):
-        image_name = "{}*alpha:{}^GS:{}.jpg".format(embed_files,alpha,guidance_scale)
-        embeds_category = embed_files.rsplit("_",1)[0]
-        category_folder = os.path.join(image_path, embeds_category)
-        os.makedirs(category_folder, exist_ok=True)
-        flag, item_path = image_check(category_folder, image_name)
-        return flag, item_path,embed_files
+def generated_image_checkpoint(image_path,embeds_name,alpha,guidance_scale):
+
+    image_name = "{}*alpha:{}^GS:{}.jpg".format(embeds_name,alpha,guidance_scale)
+    embeds_category = embeds_name.rsplit("_",1)[0]
+    category_folder = os.path.join(image_path, embeds_category)
+    os.makedirs(category_folder, exist_ok=True)
+    flag, item_path = image_check(category_folder, image_name)
+    return flag, item_path,embeds_name
 
 def image_check(base_path, image_name):
     item_path = os.path.join(base_path, image_name)
