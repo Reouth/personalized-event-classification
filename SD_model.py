@@ -51,48 +51,55 @@ def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =Fals
     logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
     return vae,text_encoder,tokenizer,unet,scheduler
 
-def all_generator(all_files,output_folder,imagic_pretrained_path,Imagic_pipe,SD_model_name, CLIP_model_name, device,seed_range,alpha_range,guidance_scale_range,height: Optional[int] = 512,
-    width: Optional[int] = 512,
-    num_inference_steps: Optional[int] = 50):
+def all_generator(all_files,output_folder,imagic_pretrained_path,Imagic_pipe,SD_model_name, CLIP_model_name, device,
+                  seed_range,alpha_range,guidance_scale_range,cat_embeds=None,height: Optional[int] = 512,
+                  width: Optional[int] = 512,num_inference_steps: Optional[int] = 50):
     for embeds in all_files:
-        imagic_embds_path = os.path.join(imagic_pretrained_path, embeds)
-        cat_folder = embeds.rsplit("_", 1)[0]
-    if Imagic_pipe:
-        pipe_name = 'Imagic_pipeline'
-        SD_pretrained_model = None
-    else:
-        pipe_name = 'SD_pipeline'
-        SD_pretrained_model = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    imagic_parameters, loaded = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device)
+        if cat_embeds is not None:
+            cat_embeddings = cat_embeds[embeds][0] + cat_embeds[embeds][1] / cat_embeds[embeds][2]
+            Imagic_pipe=False
+        else:
+            cat_embeddings =None
 
-    for seed in seed_range:
-        output_dir = os.path.join(dir, pipe_name, "seed_{}".format(str(seed)))
-        os.makedirs(output_dir, exist_ok=True)
-        for alpha in alpha_range:
-            for guidance_scale in guidance_scale_range:
-                image_checkpoint, image_path = helper_functions.generated_image_checkpoint(imagic_pretrained_path,
-                                                                                           output_folder,
-                                                                                           alpha,
-                                                                                           guidance_scale)
-                cat_path, image_name = image_path.rsplit("/", 1)
-                os.makedirs(cat_path, exist_ok=True)
-                cat_name = "{}*alpha:{}^GS:{}.jpg".format(cat_folder, alpha, guidance_scale)
-                cat_checkpoint, cat_image_path = helper_functions.image_check(cat_path, cat_name)
-                if image_checkpoint:
-                    continue
-                else:
-                    image_generator(cat_path, imagic_parameters, image_name,
-                                             SD_pretrained_model,
-                                             alpha,
-                                             seed=seed,
-                                            height=height,
-                                            width=width,
-                                            num_inference_steps=num_inference_steps,
-                                             guidance_scale=guidance_scale,
-                                             )
+        if Imagic_pipe:
+            pipe_name = 'Imagic_pipeline'
+            SD_pretrained_model = None
+        else:
+            pipe_name = 'SD_pipeline'
+            SD_pretrained_model = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        imagic_parameters = data_upload.upload_single_imagic_params(imagic_pretrained_path, embeds, CLIP_model_name,
+                                                                    device)
+        for seed in seed_range:
+            output_dir = os.path.join(output_folder, pipe_name, "seed_{}".format(str(seed)))
+            os.makedirs(output_dir, exist_ok=True)
+            for alpha in alpha_range:
+                for guidance_scale in guidance_scale_range:
+                    image_checkpoint, image_path, embeds_file = helper_functions.generated_image_checkpoint(output_dir,
+                                                                                                            embeds,
+                                                                                                            alpha,
+                                                                                                            guidance_scale)
+                    print(image_checkpoint, image_path, embeds_file)
+                    cat_path, image_name = image_path.rsplit("/", 1)
+                    os.makedirs(cat_path, exist_ok=True)
+                    if image_checkpoint:
+                        continue
+                    else:
+                        image_generator(cat_path,
+                                                 imagic_parameters,
+                                                 image_name,
+                                                 cat_embeddings,
+                                                 SD_pretrained_model,
+                                                 alpha,
+                                                 seed=seed,
+                                                 height=height,
+                                                 width=width,
+                                                 num_inference_steps=num_inference_steps,
+                                                 guidance_scale=guidance_scale)
+
+
 def image_generator(output_folder,imagic_parameters,image_name,cat_embeds=None,SD_pretrained_models=None,alpha = 0,
     seed: int = 0,
     height: Optional[int] = 512,
