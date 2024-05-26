@@ -71,6 +71,20 @@ def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
                 break
     return Imagic_params, loaded
 
+def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device):
+    imagic_pretrained_path = os.path.join(path, embeds_file)
+    print(imagic_pretrained_path)
+    if os.path.isdir(imagic_pretrained_path):
+        print(f"uploading embeddings for directory: {imagic_pretrained_path}")
+        pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
+                                                        True)
+        target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(device)
+        optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(device)
+        pipeline = SD_model.StableDiffusionPipeline(*pretrained_models)
+        Imagic_params = (pipeline,target_embeddings,optimized_embeddings)
+        return Imagic_params
+    else:
+        print('there is no embeding directory called {}'.format(imagic_pretrained_path))
 
 
 def upload_cat_embeds(path, CLIP_model_name,device):
