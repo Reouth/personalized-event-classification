@@ -58,6 +58,7 @@ def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
             continue
         else:
             imagic_pretrained_path = os.path.join(path, embed_files)
+            print(imagic_pretrained_path)
             if os.path.isdir(imagic_pretrained_path):
                 print(f"uploading embeddings for directory: {imagic_pretrained_path}")
                 pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
@@ -70,22 +71,28 @@ def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
                 break
     return Imagic_params, loaded
 
-def upload_cat_embeds(path, embeds_category,CLIP_model_name,device):
+
+
+def upload_cat_embeds(path, CLIP_model_name,device):
      loaded = []
      count = 0
+     embeddings = {}
      for embeds in os.listdir(path):
+         embeds_category = embeds.rsplit("_",1)[0]
          Imagic_params, loaded = upload_imagic_params(path, CLIP_model_name, device,loaded)
          pipeline, target_embeddings, optimized_embeddings = Imagic_params
-         if count ==0 and (embeds_category in embeds):
-             t_embedding = target_embeddings
-             count = 0
-             O_embedding = optimized_embeddings
-         if embeds_category in embeds:
-            t_embedding = t_embedding + target_embeddings
-            count += 1
-            O_embedding = O_embedding + optimized_embeddings
+         if embeds_category in embeddings:
+             existing_embeds = embeddings[embeds_category]
 
-     return t_embedding, O_embedding,count
+             count += 1
+             embeddings[embeds_category] = (existing_embeds[0]+target_embeddings, existing_embeds[1]+optimized_embeddings,existing_embeds[2]+count)
+         else:
+            t_embedding = t_embedding + target_embeddings
+            count = 1
+            embeddings[embeds_category] = (target_embeddings, optimized_embeddings,count)
+
+
+     return embeddings
 
 
 
