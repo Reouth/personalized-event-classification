@@ -1,6 +1,10 @@
 import os
 import pandas as pd
 from PIL import Image
+
+import data_upload
+
+
 def list_csv_files_in_directory(directory_path):
     try:
         # List all items in the directory
@@ -54,18 +58,9 @@ def generated_image_checkpoint(embeds_path,image_path,alpha,guidance_scale):
         return flag, item_path,embed_files
 
 def image_check(base_path, image_name):
-    item_path=""
+    item_path = os.path.join(base_path, image_name)
     flag = False
-
-    for item in os.listdir(base_path):
-        item_path = os.path.join(base_path, item)
-
-        if os.path.isdir(item_path):
-            print(f"Entering directory: {item_path}")
-            # Recursively load images from subdirectories
-            flag = image_check(item_path, image_name) or flag
-        elif item == image_name:
-            flag = True
-            print("image {} already generated".format(image_name))
+    if data_upload.is_image(item_path):
+        flag = True
     return flag,item_path
 
