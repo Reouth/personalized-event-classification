@@ -3,6 +3,13 @@ from PIL import Image
 import SD_model
 import torch
 
+import pathlib
+
+def upload_csvs(csv_dir_path, csv_paths=[]):
+  csv_dir = pathlib.Path(csv_dir_path)
+  csv_paths += list(csv_dir.glob("*.csv"))
+  return csv_paths
+
 def is_image(file_path):
     """Check if a file is an image."""
     try:

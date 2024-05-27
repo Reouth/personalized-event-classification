@@ -24,7 +24,7 @@ def csv_checkpoint(csv_folder,cls,test_image):
     filepath = "{}_results.csv".format(cls)
     csv_path = os.path.join(csv_folder, filepath)
     print(csv_list)
-    print(csv_path)
+    print(filepath)
     if filepath in csv_list:
         df_sd = pd.read_csv(csv_path)
         df_sd = df_sd.drop(columns=['Unnamed: 0'])
@@ -49,7 +49,7 @@ def csv_checkpoint(csv_folder,cls,test_image):
     return image_flag, df_sd, csv_path
 
 def generated_image_checkpoint(image_path,embeds_name,alpha,guidance_scale):
-
+    print("path entered {}".format(image_path))
     image_name = "{}*alpha:{}^GS:{}.jpg".format(embeds_name,alpha,guidance_scale)
     embeds_category = embeds_name.rsplit("_",1)[0]
     category_folder = os.path.join(image_path, embeds_category)
