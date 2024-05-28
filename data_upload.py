@@ -98,6 +98,9 @@ def upload_embeds(path, CLIP_model_name,alpha, device,SD_pipe=None):
     all_embeds = {}
     all_files = set(os.listdir(path))
     for file in all_files:
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         imagic_parameters = upload_single_imagic_params(path, file, CLIP_model_name,
                                                                         device)
         pipeline, target_embeddings, optimized_embeddings = imagic_parameters
