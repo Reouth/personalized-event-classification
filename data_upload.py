@@ -94,21 +94,19 @@ def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device):
         print('there is no embeding directory called {}'.format(imagic_pretrained_path))
 
 
-def upload_embeds(path, CLIP_model_name,alpha, device,SD_pipe=None):
-    all_embeds = {}
-    all_files = set(os.listdir(path))
-    for file in all_files:
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        imagic_parameters = upload_single_imagic_params(path, file, CLIP_model_name,
-                                                                        device)
-        pipeline, target_embeddings, optimized_embeddings = imagic_parameters
-        if SD_pipe is not None:
-            pipeline = SD_pipe
+def upload_embeds(path,file, CLIP_model_name,alpha, device,SD_pipe=None):
+    all_embeds ={}
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    imagic_parameters = upload_single_imagic_params(path, file, CLIP_model_name,
+                                                                    device)
+    pipeline, target_embeddings, optimized_embeddings = imagic_parameters
+    if SD_pipe is not None:
+        pipeline = SD_pipe
 
-        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
-        all_embeds[file] = pipeline, embeddings
+    embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+    all_embeds[file] = pipeline, embeddings
     return all_embeds
 
 def upload_cat_embeds(path, CLIP_model_name, device,SD_pipe=None):

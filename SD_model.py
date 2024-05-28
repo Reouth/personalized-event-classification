@@ -170,27 +170,31 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
         pipe_name = 'SD_pipeline'
         SD_pretrained_model = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
         cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device, SD_pretrained_model)
-    embeds_files = data_upload.upload_embeds(imagic_pretrained_path, CLIP_model_name,alpha, device,
+
+
+    all_files = set(os.listdir(imagic_pretrained_path))
+    for file in all_files:
+        embeds_files = data_upload.upload_embeds(imagic_pretrained_path,file, CLIP_model_name,alpha, device,
                                              SD_pretrained_model)
 
-    csv_dir = os.path.join(csv_folder, pipe_name)
-    os.makedirs(csv_dir, exist_ok=True)
-    for image_name, image, _ in image_list:
-        cls = image_name.rsplit("_", 1)[0]
-        image_flag, df_sd, csv_file_path = helper_functions.csv_checkpoint(csv_dir, cls, image_name)
-        class_csv = cls+"_class_avg"
-        image_cls_flag, df_cls_sd, csv_cls_path = helper_functions.csv_checkpoint(csv_dir, class_csv, image_name)
-        print(df_sd)
-        if not image_flag:
-            SD_loss = conditioned_classifier(embeds_files, image, alpha,
-                                                 seed, guidance_scale,height,width,
-                                      resolution,num_inference_steps,guidance_scale)
-            helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
-        elif not image_cls_flag and not cat_files:
-            SD_cls_loss = conditioned_classifier(cat_files, image, alpha,
-                                                 seed,  guidance_scale,height,width,
-                                      resolution,num_inference_steps,guidance_scale)
-            helper_functions.save_to_csv(SD_cls_loss,df_cls_sd,image_name,csv_cls_path)
+        csv_dir = os.path.join(csv_folder, pipe_name)
+        os.makedirs(csv_dir, exist_ok=True)
+        for image_name, image, _ in image_list:
+            cls = image_name.rsplit("_", 1)[0]
+            image_flag, df_sd, csv_file_path = helper_functions.csv_checkpoint(csv_dir, cls, image_name,file)
+            class_csv = cls+"_class_avg"
+            image_cls_flag, df_cls_sd, csv_cls_path = helper_functions.csv_checkpoint(csv_dir, class_csv, image_name,file)
+            print(df_sd)
+            if not image_flag:
+                SD_loss = conditioned_classifier(embeds_files, image, alpha,
+                                                     seed, guidance_scale,height,width,
+                                          resolution,num_inference_steps,guidance_scale)
+                helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
+            elif not image_cls_flag and not cat_files:
+                SD_cls_loss = conditioned_classifier(cat_files, image, alpha,
+                                                     seed,  guidance_scale,height,width,
+                                          resolution,num_inference_steps,guidance_scale)
+                helper_functions.save_to_csv(SD_cls_loss,df_cls_sd,image_name,csv_cls_path)
 
 def preprocess(image,PIL_INTERPOLATION):
     w, h = image.size
