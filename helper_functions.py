@@ -3,7 +3,14 @@ import pandas as pd
 from PIL import Image
 
 import data_upload
-
+def save_to_csv(SD_loss,df_sd,image_name,csv_file_path):
+    sorted_SD = sorted(SD_loss.items(), key=lambda kv: kv[1])
+    df_image = pd.DataFrame(sorted_SD, columns=['input_SD_embeds', 'SD_loss'])
+    df_image.insert(0, 'GT Image name', image_name)
+    print(df_image)
+    df_sd = pd.concat([df_sd, df_image], ignore_index=False)
+    # Save to CSV
+    df_sd.to_csv(csv_file_path)
 
 def list_csv_files_in_directory(directory_path):
     try:

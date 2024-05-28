@@ -58,25 +58,25 @@ def upload_images(base_path,class_batch=float('inf'),max_frames = float('inf')):
 
     return image_data
 
-def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
-    Imagic_params = []
-    for embed_files in os.listdir(path):
-        if embed_files in loaded:
-            continue
-        else:
-            imagic_pretrained_path = os.path.join(path, embed_files)
-            print(imagic_pretrained_path)
-            if os.path.isdir(imagic_pretrained_path):
-                print(f"uploading embeddings for directory: {imagic_pretrained_path}")
-                pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
-                                                                True)
-                target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(device)
-                optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(device)
-                pipeline = SD_model.StableDiffusionPipeline(*pretrained_models)
-                Imagic_params = (pipeline,target_embeddings,optimized_embeddings)
-                loaded.append(embed_files)
-                break
-    return Imagic_params, loaded
+# def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
+#     Imagic_params = []
+#     for embed_files in os.listdir(path):
+#         if embed_files in loaded:
+#             continue
+#         else:
+#             imagic_pretrained_path = os.path.join(path, embed_files)
+#             print(imagic_pretrained_path)
+#             if os.path.isdir(imagic_pretrained_path):
+#                 print(f"uploading embeddings for directory: {imagic_pretrained_path}")
+#                 pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
+#                                                                 True)
+#                 target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(device)
+#                 optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(device)
+#                 pipeline = SD_model.StableDiffusionPipeline(*pretrained_models)
+#                 Imagic_params = (pipeline,target_embeddings,optimized_embeddings)
+#                 loaded.append(embed_files)
+#                 break
+#     return Imagic_params, loaded
 
 def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device):
     imagic_pretrained_path = os.path.join(path, embeds_file)
@@ -94,22 +94,21 @@ def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device):
         print('there is no embeding directory called {}'.format(imagic_pretrained_path))
 
 
-def upload_embeds(path, CLIP_model_name, device):
-    count = 0
-    embeddings = {}
-    for embeds in os.listdir(path):
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device)
-        pipeline, target_embeddings, optimized_embeddings = Imagic_params
+def upload_embeds(path, CLIP_model_name,alpha, device,SD_pipe=None):
+    all_embeds = {}
+    all_files = set(os.listdir(path))
+    for file in all_files:
+        imagic_parameters = upload_single_imagic_params(path, file, CLIP_model_name,
+                                                                        device)
+        pipeline, target_embeddings, optimized_embeddings = imagic_parameters
+        if SD_pipe is not None:
+            pipeline = SD_pipe
 
-        embeddings[embeds] = (target_embeddings, optimized_embeddings, count)
+        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+        all_embeds[file] = pipeline, embeddings
+    return all_embeds
 
-    return embeddings
-
-
-def upload_cat_embeds(path, CLIP_model_name, device):
+def upload_cat_embeds(path, CLIP_model_name, device,SD_pipe=None):
     final_embeds = {}
     embeddings = {}
 
@@ -121,7 +120,8 @@ def upload_cat_embeds(path, CLIP_model_name, device):
             torch.cuda.empty_cache()
 
         Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device)
-        pipeline, target_embeddings, optimized_embeddings = Imagic_params
+        _, target_embeddings, optimized_embeddings = Imagic_params
+        pipeline =SD_pipe
 
         if embeds_category in embeddings:
             existing_target_embeds, existing_optimized_embeds, count = embeddings[embeds_category]
@@ -135,7 +135,8 @@ def upload_cat_embeds(path, CLIP_model_name, device):
 
     for cat, params in embeddings.items():
         total_target_embeds, total_optimized_embeds, count = params
-        final_embeds[cat] = (total_target_embeds + total_optimized_embeds) / count
+        embeddings = (total_target_embeds + total_optimized_embeds) / count
+        final_embeds[cat] =  pipeline, embeddings
 
     return final_embeds
 
