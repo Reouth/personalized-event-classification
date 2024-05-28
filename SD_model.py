@@ -130,40 +130,22 @@ def image_generator(output_folder,imagic_parameters,image_name,cat_embeds=None,S
     image =images[0]
     image.save(os.path.join(output_folder, image_name))
 
-
-def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,
+def conditioned_classifier(imagic_parameters,test_image,cat_embds= False,alpha = 0,
     seed: int = 0,
     height: Optional[int] = 512,
     width: Optional[int] = 512,
     resolution: Optional[int] = 512,
     num_inference_steps: Optional[int] = 50,
     guidance_scale: float = 7.5):
-    cat_embeds= {}
-    SD_loss = {}
-    loaded = []
-    all_files = set(os.listdir(imagic_pretrained_path))
-    while len(loaded) < len(all_files):
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        imagic_parameters = data_upload.upload_imagic_params(imagic_pretrained_path, CLIP_model_name, device, loaded)
-        pipeline, target_embeddings, optimized_embeddings = imagic_parameters[0]
-        loaded = imagic_parameters[1]
-        if SD_pretrained_models is not None:
-            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
 
-        embeds_name = loaded[-1]
-        embeds_category = embeds_name.rsplit("_",1)[0]
-        if embeds_category in cat_embeds:
-            t_embedding= t_embedding+target_embeddings
-            count +=1
-            O_embedding = O_embedding+optimized_embeddings
+    SD_loss = {}
+
+    for embeds_name,params in imagic_parameters.items():
+        if cat_embds:
+            pipline, embeddings = params
         else:
-            t_embedding =target_embeddings
-            count =0
-            O_embedding = optimized_embeddings
-        cat_embeds[embeds_category] = (count, t_embedding,O_embedding)
-        embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+            pipeline, target_embeddings, optimized_embeddings = params
+            embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
 
         with torch.autocast("cuda"), torch.inference_mode():
             loss_avg = pipeline.conditioned_diffusion_loss(
@@ -178,21 +160,36 @@ def conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_im
             )
 
         SD_loss[embeds_name] = (loss_avg.avg.item())
-    SD_cat_loss = {}
-    for cat_name,embeds in cat_embeds.items():
-        cat_embeddings = (embeds[1]+embeds[2])/count
-        with torch.autocast("cuda"), torch.inference_mode():
-            loss_avg_cat = pipeline.conditioned_diffusion_loss(
-                cond_embeddings=cat_embeddings,
-                image=test_image.convert('RGB'),
-                seed=seed,
-                height=height,
-                width=width,
-                resolution=resolution,
-                num_inference_steps=num_inference_steps,
-                guidance_scale=guidance_scale)
 
-        SD_cat_loss[cat_name] = (loss_avg_cat.avg.item())
+    return SD_loss
+
+
+def all_emebs_conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,
+    seed: int = 0,
+    height: Optional[int] = 512,
+    width: Optional[int] = 512,
+    resolution: Optional[int] = 512,
+    num_inference_steps: Optional[int] = 50,
+    guidance_scale: float = 7.5):
+    loaded = []
+    SD_loss={}
+    cat_embds = False
+    all_files = set(os.listdir(imagic_pretrained_path))
+    for file in all_files:
+        imagic_parameters = data_upload.upload_single_imagic_params(imagic_pretrained_path,file, CLIP_model_name, device, loaded)
+        if SD_pretrained_models is not None:
+            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
+        SD_loss = conditioned_classifier(imagic_parameters, test_image, cat_embds, alpha,
+                               seed,guidance_scale)
+
+    SD_cat_loss = {}
+    cat_embds= True
+    all_cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device)
+    pipeline = StableDiffusionPipeline(*SD_pretrained_models)
+    for cat_name,embeds in all_cat_files.items():
+        params = pipeline,embeds
+        SD_cat_loss = conditioned_classifier(params, test_image, cat_embds, alpha,
+                                         seed, guidance_scale)
     combined_dict = SD_loss.copy()
     combined_dict.update(SD_cat_loss)
     print(combined_dict)

@@ -2,7 +2,7 @@ import os
 from PIL import Image
 import SD_model
 import torch
-
+import gc
 import pathlib
 
 def upload_csvs(csv_dir_path, csv_paths=[]):
@@ -94,26 +94,50 @@ def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device):
         print('there is no embeding directory called {}'.format(imagic_pretrained_path))
 
 
-def upload_cat_embeds(path, CLIP_model_name,device):
-     loaded = []
-     count = 0
-     embeddings = {}
-     for embeds in os.listdir(path):
-         embeds_category = embeds.rsplit("_",1)[0]
-         Imagic_params, loaded = upload_imagic_params(path, CLIP_model_name, device,loaded)
-         pipeline, target_embeddings, optimized_embeddings = Imagic_params
-         if embeds_category in embeddings:
-             existing_embeds = embeddings[embeds_category]
+def upload_embeds(path, CLIP_model_name, device):
+    count = 0
+    embeddings = {}
+    for embeds in os.listdir(path):
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device)
+        pipeline, target_embeddings, optimized_embeddings = Imagic_params
 
-             count += 1
-             embeddings[embeds_category] = (existing_embeds[0]+target_embeddings, existing_embeds[1]+optimized_embeddings,existing_embeds[2]+count)
-         else:
-            t_embedding = t_embedding + target_embeddings
-            count = 1
-            embeddings[embeds_category] = (target_embeddings, optimized_embeddings,count)
+        embeddings[embeds] = (target_embeddings, optimized_embeddings, count)
+
+    return embeddings
 
 
-     return embeddings
+def upload_cat_embeds(path, CLIP_model_name, device):
+    final_embeds = {}
+    embeddings = {}
+
+    for embeds in os.listdir(path):
+        embeds_category = embeds.rsplit("_", 1)[0]
+
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device)
+        pipeline, target_embeddings, optimized_embeddings = Imagic_params
+
+        if embeds_category in embeddings:
+            existing_target_embeds, existing_optimized_embeds, count = embeddings[embeds_category]
+            embeddings[embeds_category] = (
+                existing_target_embeds + target_embeddings,
+                existing_optimized_embeds + optimized_embeddings,
+                count + 1
+            )
+        else:
+            embeddings[embeds_category] = (target_embeddings, optimized_embeddings, 1)
+
+    for cat, params in embeddings.items():
+        total_target_embeds, total_optimized_embeds, count = params
+        final_embeds[cat] = (total_target_embeds + total_optimized_embeds) / count
+
+    return final_embeds
 
 
 
