@@ -157,7 +157,7 @@ def conditioned_classifier(parameters,test_image,
     return SD_loss
 
 
-def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,CLIP_model_name,device,image_list,SD_pretrained_models=None,
+def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model_name,CLIP_model_name,device,image_list,
                                       Imagic_pipe=False,alpha = 0,seed: int = 0,height: Optional[int] = 512,width: Optional[int] = 512,
                                       resolution: Optional[int] = 512,num_inference_steps: Optional[int] = 50,guidance_scale: float = 7.5):
 
@@ -168,9 +168,9 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,CLIP_mod
 
     else:
         pipe_name = 'SD_pipeline'
-        SD_pretrained_model = SD_pretrained_load(SD_pretrained_models, CLIP_model_name, device)
+        SD_pretrained_model = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
         cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device, SD_pretrained_model)
-    embeds_files = data_upload.upload_embeds(imagic_pretrained_path, SD_pretrained_models, CLIP_model_name, device,
+    embeds_files = data_upload.upload_embeds(imagic_pretrained_path, CLIP_model_name,alpha, device,
                                              SD_pretrained_model)
 
     csv_dir = os.path.join(csv_folder, pipe_name)
@@ -183,11 +183,13 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,CLIP_mod
         print(df_sd)
         if not image_flag:
             SD_loss = conditioned_classifier(embeds_files, image, alpha,
-                                                 seed, guidance_scale)
+                                                 seed, guidance_scale,height,width,
+                                      resolution,num_inference_steps,guidance_scale)
             helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
         elif not image_cls_flag and not cat_files:
             SD_cls_loss = conditioned_classifier(cat_files, image, alpha,
-                                                 seed, guidance_scale)
+                                                 seed,  guidance_scale,height,width,
+                                      resolution,num_inference_steps,guidance_scale)
             helper_functions.save_to_csv(SD_cls_loss,df_cls_sd,image_name,csv_cls_path)
 
 def preprocess(image,PIL_INTERPOLATION):
