@@ -158,7 +158,7 @@ def conditioned_classifier(parameters,test_image,
 
 
 def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,CLIP_model_name,device,image_list,SD_pretrained_models=None,
-                                      Imagic_pipe=False,alpha = 0,seed: int = 0,eight: Optional[int] = 512,width: Optional[int] = 512,
+                                      Imagic_pipe=False,alpha = 0,seed: int = 0,height: Optional[int] = 512,width: Optional[int] = 512,
                                       resolution: Optional[int] = 512,num_inference_steps: Optional[int] = 50,guidance_scale: float = 7.5):
 
     if Imagic_pipe:
