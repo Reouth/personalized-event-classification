@@ -41,15 +41,14 @@ def csv_checkpoint(csv_folder, cls, test_image, input_embeds_value):
 
         # Check if the necessary columns exist in the DataFrame columns
         if 'GT Image name' in df_sd.columns and 'input_SD_embeds' in df_sd.columns:
-            gt_image_exists = test_image in df_sd['GT Image name'].unique()
-            input_sd_embeds_exists = input_embeds_value in df_sd['input_SD_embeds'].unique()
+            # Check if both values exist in the same row
+            matches = df_sd[(df_sd['GT Image name'] == test_image) & (df_sd['input_SD_embeds'] == input_embeds_value)]
 
-            if gt_image_exists and input_sd_embeds_exists:
-                print(
-                    f"test_image: {test_image} found in 'GT Image name' and {input_embeds_value} found in 'input_SD_embeds' columns.")
+            if not matches.empty:
+                print(f"test_image: {test_image} and {input_embeds_value} found in the same row.")
                 image_flag = True
             else:
-                print(f"test_image: {test_image} or {input_embeds_value} not found in the respective columns.")
+                print(f"test_image: {test_image} and {input_embeds_value} not found in the same row.")
         else:
             print("One or both columns 'GT Image name' or 'input_SD_embeds' are not found in the CSV file.")
             print("Available columns:", df_sd.columns)
@@ -58,6 +57,8 @@ def csv_checkpoint(csv_folder, cls, test_image, input_embeds_value):
         df_sd = pd.DataFrame()
 
     return image_flag, df_sd, csv_path
+
+
 # def csv_checkpoint(csv_folder,cls,test_image):
 #     image_flag =False
 #     csv_list = list_csv_files_in_directory(csv_folder)
