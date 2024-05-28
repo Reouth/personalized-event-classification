@@ -1,6 +1,6 @@
 
 from PIL import Image
-
+import pandas as pd
 import torch
 from torch.nn import functional as F
 import accelerate
@@ -11,9 +11,6 @@ from diffusers import DiffusionPipeline
 
 from diffusers.schedulers import DDIMScheduler, LMSDiscreteScheduler
 from diffusers.utils import logging
-
-# TODO: remove and import from diffusers.utils when the new version of diffusers is released
-
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
@@ -130,7 +127,7 @@ def image_generator(output_folder,imagic_parameters,image_name,cat_embeds=None,S
     image =images[0]
     image.save(os.path.join(output_folder, image_name))
 
-def conditioned_classifier(imagic_parameters,test_image,cat_embds= False,alpha = 0,
+def conditioned_classifier(parameters,test_image,
     seed: int = 0,
     height: Optional[int] = 512,
     width: Optional[int] = 512,
@@ -140,12 +137,8 @@ def conditioned_classifier(imagic_parameters,test_image,cat_embds= False,alpha =
 
     SD_loss = {}
 
-    for embeds_name,params in imagic_parameters.items():
-        if cat_embds:
-            pipline, embeddings = params
-        else:
-            pipeline, target_embeddings, optimized_embeddings = params
-            embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
+    for embeds_name,params in parameters.items():
+        pipeline, embeddings = params
 
         with torch.autocast("cuda"), torch.inference_mode():
             loss_avg = pipeline.conditioned_diffusion_loss(
@@ -164,38 +157,38 @@ def conditioned_classifier(imagic_parameters,test_image,cat_embds= False,alpha =
     return SD_loss
 
 
-def all_emebs_conditioned_classifier(imagic_pretrained_path,CLIP_model_name,device,test_image,SD_pretrained_models=None,alpha = 0,
-    seed: int = 0,
-    height: Optional[int] = 512,
-    width: Optional[int] = 512,
-    resolution: Optional[int] = 512,
-    num_inference_steps: Optional[int] = 50,
-    guidance_scale: float = 7.5):
-    loaded = []
-    SD_loss={}
-    cat_embds = False
-    all_files = set(os.listdir(imagic_pretrained_path))
-    for file in all_files:
-        imagic_parameters = data_upload.upload_single_imagic_params(imagic_pretrained_path,file, CLIP_model_name, device, loaded)
-        if SD_pretrained_models is not None:
-            pipeline = StableDiffusionPipeline(*SD_pretrained_models)
-        SD_loss = conditioned_classifier(imagic_parameters, test_image, cat_embds, alpha,
-                               seed,guidance_scale)
+def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,CLIP_model_name,device,image_list,SD_pretrained_models=None,
+                                      Imagic_pipe=False,alpha = 0,seed: int = 0,eight: Optional[int] = 512,width: Optional[int] = 512,
+                                      resolution: Optional[int] = 512,num_inference_steps: Optional[int] = 50,guidance_scale: float = 7.5):
 
-    SD_cat_loss = {}
-    cat_embds= True
-    all_cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device)
-    pipeline = StableDiffusionPipeline(*SD_pretrained_models)
-    for cat_name,embeds in all_cat_files.items():
-        params = pipeline,embeds
-        SD_cat_loss = conditioned_classifier(params, test_image, cat_embds, alpha,
-                                         seed, guidance_scale)
-    combined_dict = SD_loss.copy()
-    combined_dict.update(SD_cat_loss)
-    print(combined_dict)
-    sorted_SD = sorted(combined_dict.items(), key=lambda kv: kv[1])
+    if Imagic_pipe:
+        pipe_name = 'Imagic_pipeline'
+        SD_pretrained_model = None
+        cat_files={}
 
-    return sorted_SD
+    else:
+        pipe_name = 'SD_pipeline'
+        SD_pretrained_model = SD_pretrained_load(SD_pretrained_models, CLIP_model_name, device)
+        cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device, SD_pretrained_model)
+    embeds_files = data_upload.upload_embeds(imagic_pretrained_path, SD_pretrained_models, CLIP_model_name, device,
+                                             SD_pretrained_model)
+
+    csv_dir = os.path.join(csv_folder, pipe_name)
+    os.makedirs(csv_dir, exist_ok=True)
+    for image_name, image, _ in image_list:
+        cls = image_name.rsplit("_", 1)[0]
+        image_flag, df_sd, csv_file_path = helper_functions.csv_checkpoint(csv_dir, cls, image_name)
+        class_csv = cls+"_class_avg"
+        image_cls_flag, df_cls_sd, csv_cls_path = helper_functions.csv_checkpoint(csv_dir, class_csv, image_name)
+        print(df_sd)
+        if not image_flag:
+            SD_loss = conditioned_classifier(embeds_files, image, alpha,
+                                                 seed, guidance_scale)
+            helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
+        elif not image_cls_flag and not cat_files:
+            SD_cls_loss = conditioned_classifier(cat_files, image, alpha,
+                                                 seed, guidance_scale)
+            helper_functions.save_to_csv(SD_cls_loss,df_cls_sd,image_name,csv_cls_path)
 
 def preprocess(image,PIL_INTERPOLATION):
     w, h = image.size
