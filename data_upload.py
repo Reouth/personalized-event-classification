@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 import SD_model
+import SD_pipeline
 import torch
 import gc
 import pathlib
@@ -86,14 +87,14 @@ def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device):
                                                         True)
         target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(device)
         optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(device)
-        pipeline = SD_model.StableDiffusionPipeline(*pretrained_models)
+        pipeline = SD_pipeline.StableDiffusionPipeline(*pretrained_models)
         Imagic_params = (pipeline,target_embeddings,optimized_embeddings)
         return Imagic_params
     else:
         print('there is no embeding directory called {}'.format(imagic_pretrained_path))
 
 
-def upload_embeds(path,file, CLIP_model_name,alpha, device,SD_pipe=None):
+def upload_embeds(path,file, CLIP_model_name,alpha, device,SD_pretrained=None):
     all_embeds ={}
     gc.collect()
     if torch.cuda.is_available():
@@ -101,8 +102,8 @@ def upload_embeds(path,file, CLIP_model_name,alpha, device,SD_pipe=None):
     imagic_parameters = upload_single_imagic_params(path, file, CLIP_model_name,
                                                                     device)
     pipeline, target_embeddings, optimized_embeddings = imagic_parameters
-    if SD_pipe is not None:
-        pipeline = SD_pipe
+    if SD_pretrained is not None:
+        pipeline = SD_pipeline.StableDiffusionPipeline(*SD_pretrained)
 
     embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
     all_embeds[file] = pipeline, embeddings
