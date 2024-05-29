@@ -26,8 +26,11 @@ def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
     image_counts = {}  # Dictionary to store image counts for each directory
     total_frames_count = 0  # Total frame count across all directories
 
-    # Iterate through items in the base directory
-    for item in os.listdir(base_path):
+    # Sort the items to ensure deterministic order
+    sorted_items = sorted(os.listdir(base_path))
+
+    # Iterate through sorted items in the base directory
+    for item in sorted_items:
         item_path = os.path.join(base_path, item)
 
         if os.path.isdir(item_path):
@@ -57,7 +60,6 @@ def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
             print(f"Not an image file: {item_path}")
 
     return image_data
-
 # def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
 #     Imagic_params = []
 #     for embed_files in os.listdir(path):
