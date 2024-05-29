@@ -180,7 +180,7 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
                 SD_loss =conditioned_classifier(embeds_files, image,seed, height, width,
      resolution, num_inference_steps,guidance_scale)
 
-            helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
+                helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
             # elif not image_cls_flag and not Imagic_pipe:
      #            SD_cls_loss = conditioned_classifier(cat_files, image,seed, height, width,
      # resolution, num_inference_steps,guidance_scale)
