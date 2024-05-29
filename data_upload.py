@@ -6,20 +6,29 @@ import torch
 import gc
 import pathlib
 
-def upload_csvs(csv_dir_path, csv_paths=[]):
-  csv_dir = pathlib.Path(csv_dir_path)
-  csv_paths += list(csv_dir.glob("*.csv"))
-  return csv_paths
+
+def upload_csvs(csv_dir_path):
+    csv_dir = pathlib.Path(csv_dir_path)
+    csv_paths = list(csv_dir.glob("*.csv"))  # Create a new list
+    return csv_paths
+
+# def is_image(file_path):
+#     """Check if a file is an image."""
+#     try:
+#         with Image.open(file_path) as img:
+#             return True
+#     except IOError:
+#         return False
 
 def is_image(file_path):
     """Check if a file is an image."""
     try:
         with Image.open(file_path) as img:
+            img.verify()  # Verify that it is, indeed, an image
             return True
-    except IOError:
+    except (IOError, SyntaxError) as e:
+        print(f"File {file_path} is not an image or cannot be opened. Error: {e}")
         return False
-
-
 def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
     """Recursively load images with their new names into a list."""
     image_data = []  # List to hold image data along with their names
