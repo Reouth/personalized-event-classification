@@ -31,8 +31,7 @@ def csv_checkpoint(csv_folder, cls, test_image, input_embeds_value):
     csv_list = list_csv_files_in_directory(csv_folder)
     filepath = "{}_results.csv".format(cls)
     csv_path = os.path.join(csv_folder, filepath)
-    print(csv_list)
-    print(filepath)
+
 
     if filepath in csv_list:
         df_sd = pd.read_csv(csv_path)

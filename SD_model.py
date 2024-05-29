@@ -168,7 +168,7 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
     else:
         pipe_name = 'SD_pipeline'
         SD_pretrained_model = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
-        cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device, SD_pretrained_model)
+        # cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device, SD_pretrained_model)
 
 
     all_files = set(os.listdir(imagic_pretrained_path))
@@ -181,17 +181,17 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
         for image_name, image, _ in image_list:
             cls = image_name.rsplit("_", 1)[0]
             image_flag, df_sd, csv_file_path = helper_functions.csv_checkpoint(csv_dir, cls, image_name,file)
-            class_csv = cls+"_class_avg"
-            image_cls_flag, df_cls_sd, csv_cls_path = helper_functions.csv_checkpoint(csv_dir, class_csv, image_name,file)
+            # class_csv = cls+"_class_avg"
+            # image_cls_flag, df_cls_sd, csv_cls_path = helper_functions.csv_checkpoint(csv_dir, class_csv, image_name,file)
             print(df_sd)
             if not image_flag:
                 SD_loss = conditioned_classifier(embeds_files, image,seed, height, width,
      resolution, num_inference_steps,guidance_scale)
                 helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
-            elif not image_cls_flag and not Imagic_pipe:
-                SD_cls_loss = conditioned_classifier(cat_files, image,seed, height, width,
-     resolution, num_inference_steps,guidance_scale)
-                helper_functions.save_to_csv(SD_cls_loss,df_cls_sd,image_name,csv_cls_path)
+            # elif not image_cls_flag and not Imagic_pipe:
+     #            SD_cls_loss = conditioned_classifier(cat_files, image,seed, height, width,
+     # resolution, num_inference_steps,guidance_scale)
+     #            helper_functions.save_to_csv(SD_cls_loss,df_cls_sd,image_name,csv_cls_path)
 
 def preprocess(image,PIL_INTERPOLATION):
     w, h = image.size
