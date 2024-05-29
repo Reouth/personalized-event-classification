@@ -169,7 +169,7 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
 
         csv_dir = os.path.join(csv_folder, pipe_name)
         os.makedirs(csv_dir, exist_ok=True)
-        SD_loss={}
+
         for image_name, image, _ in image_list:
             cls = image_name.rsplit("_", 1)[0]
             image_flag, df_sd, csv_file_path = helper_functions.csv_checkpoint(csv_dir, cls, image_name,file)
@@ -177,10 +177,10 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
             # image_cls_flag, df_cls_sd, csv_cls_path = helper_functions.csv_checkpoint(csv_dir, class_csv, image_name,file)
             print(df_sd)
             if not image_flag:
-                SD_loss.update(conditioned_classifier(embeds_files, image,seed, height, width,
-     resolution, num_inference_steps,guidance_scale))
+                SD_loss =conditioned_classifier(embeds_files, image,seed, height, width,
+     resolution, num_inference_steps,guidance_scale)
 
-        helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
+            helper_functions.save_to_csv(SD_loss,df_sd,image_name,csv_file_path)
             # elif not image_cls_flag and not Imagic_pipe:
      #            SD_cls_loss = conditioned_classifier(cat_files, image,seed, height, width,
      # resolution, num_inference_steps,guidance_scale)
