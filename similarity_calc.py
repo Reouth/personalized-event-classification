@@ -3,6 +3,7 @@ import pandas as pd
 
 def calculate_top_k_accuracy(csv_path, correct_class_col, pred_class_col, loss_col, k,down):
     df = pd.read_csv(csv_path)
+    cls = csv_path.rsplit("/",1)[1].rsplit("_results",1)[0]
     correct, counts = 0, 0
     group_accuracies = {}
 
