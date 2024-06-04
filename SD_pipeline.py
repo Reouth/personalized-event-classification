@@ -199,7 +199,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         loss_avg = AverageMeter()
         for i, t in tqdm(enumerate((timesteps_tensor))):
             # expand the latents if we are doing classifier free guidance
-            noisy_latents = self.scheduler.add_noise(noisy_latents, noise, t).to(self.device)
+            # noisy_latents = self.scheduler.add_noise(noisy_latents, noise, t).to(self.device)
             latent_model_input = torch.cat([noisy_latents] * 2) if do_classifier_free_guidance else noisy_latents
             if self.scheduler is LMSDiscreteScheduler:
                 sigma = self.scheduler.sigmas[i]
