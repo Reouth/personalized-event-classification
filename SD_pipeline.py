@@ -157,6 +157,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
     def base_pipeline(self,
         cond_embeddings,
         input_latents,
+        generate=False,
         seed:int=0,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
@@ -199,7 +200,8 @@ class StableDiffusionPipeline(DiffusionPipeline):
         loss_avg = AverageMeter()
         for i, t in tqdm(enumerate((timesteps_tensor))):
             # expand the latents if we are doing classifier free guidance
-            # noisy_latents = self.scheduler.add_noise(noisy_latents, noise, t).to(self.device)
+            if not generate:
+                noisy_latents = self.scheduler.add_noise(noisy_latents, noise, t).to(self.device)
             latent_model_input = torch.cat([noisy_latents] * 2) if do_classifier_free_guidance else noisy_latents
             if self.scheduler is LMSDiscreteScheduler:
                 sigma = self.scheduler.sigmas[i]
@@ -227,14 +229,14 @@ class StableDiffusionPipeline(DiffusionPipeline):
         output_type: Optional[str] = "pil",
         guidance_scale: float = 7.5,
     ):
-
+        generate = True
         # get the initial random noise unless the user supplied it
         latents_shape = (1, self.unet.config.in_channels, height // 8, width // 8)
         latents_dtype = cond_embeddings.dtype
         torch.manual_seed(seed)
         input_latents = torch.randn(latents_shape, dtype=latents_dtype).to(self.device)
 
-        _,latents = self.base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
+        _,latents = self.base_pipeline(cond_embeddings,input_latents,generate,seed,height,width,num_inference_steps,guidance_scale)
         latents = 1 / 0.18215 * latents
         images = self.vae.decode(latents)
 
@@ -282,8 +284,8 @@ class StableDiffusionPipeline(DiffusionPipeline):
         with torch.inference_mode():
             input_latents = self.vae.encode(input_image).latent_dist.sample()
             input_latents = 0.18215 * input_latents
-
-        loss_avg,_ = self.base_pipeline(cond_embeddings,input_latents,seed,height,width,num_inference_steps,guidance_scale)
+        generate=False
+        loss_avg,_ = self.base_pipeline(cond_embeddings,input_latents,generate,seed,height,width,num_inference_steps,guidance_scale)
 
 
         return  loss_avg

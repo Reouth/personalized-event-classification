@@ -5,7 +5,7 @@ import SD_pipeline
 import torch
 import gc
 import pathlib
-
+import numpy as np
 
 def upload_csvs(csv_dir_path):
     csv_dir = pathlib.Path(csv_dir_path)
@@ -29,6 +29,19 @@ def is_image(file_path):
     except (IOError, SyntaxError) as e:
         print(f"File {file_path} is not an image or cannot be opened. Error: {e}")
         return False
+
+
+import os
+import numpy as np
+from PIL import Image
+
+
+def is_image(file_path):
+    """Check if a file is an image based on its extension."""
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.gif']
+    return any(file_path.lower().endswith(ext) for ext in valid_extensions)
+
+
 def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
     """Recursively load images with their new names into a list."""
     image_data = []  # List to hold image data along with their names
@@ -38,8 +51,16 @@ def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
     # Sort the items to ensure deterministic order
     sorted_items = sorted(os.listdir(base_path))
 
+    # If class_batch is not infinity, compute sample_tf
+    if class_batch != float('inf'):
+        sample_tf = np.floor(
+            len([item for item in sorted_items if is_image(os.path.join(base_path, item))]) / class_batch)
+        sample_tf = int(max(sample_tf, 1))  # Ensure sample_tf is at least 1
+    else:
+        sample_tf = 1
+
     # Iterate through sorted items in the base directory
-    for item in sorted_items:
+    for i, item in enumerate(sorted_items):
         item_path = os.path.join(base_path, item)
 
         if os.path.isdir(item_path):
@@ -47,6 +68,9 @@ def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
             # Recursively load images from subdirectories
             image_data += upload_images(item_path, class_batch, max_frames)
         elif is_image(item_path):
+            if i % sample_tf != 0:
+                continue  # Skip this file if it doesn't meet the sample_tf condition
+
             folder_name = os.path.basename(base_path)  # Get the folder name
 
             if folder_name not in image_counts:
@@ -69,6 +93,8 @@ def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
             print(f"Not an image file: {item_path}")
 
     return image_data
+
+
 # def upload_imagic_params(path,CLIP_model_name,device,loaded=[]):
 #     Imagic_params = []
 #     for embed_files in os.listdir(path):
