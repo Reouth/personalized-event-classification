@@ -115,38 +115,44 @@ def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
 #                 break
 #     return Imagic_params, loaded
 
-def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device):
+def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device,Imagic_pipe):
     imagic_pretrained_path = os.path.join(path, embeds_file)
     print(imagic_pretrained_path)
     if os.path.isdir(imagic_pretrained_path):
         print(f"uploading embeddings for directory: {imagic_pretrained_path}")
-        pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
-                                                        True)
+        if Imagic_pipe:
+            pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
+                                                            True)
+            pipeline = SD_pipeline.StableDiffusionPipeline(*pretrained_models)
+        else:
+            pipeline =None
         target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(device)
         optimized_embeddings = torch.load(os.path.join(imagic_pretrained_path, "optimized_embeddings.pt")).to(device)
-        pipeline = SD_pipeline.StableDiffusionPipeline(*pretrained_models)
+
         Imagic_params = (pipeline,target_embeddings,optimized_embeddings)
         return Imagic_params
     else:
         print('there is no embeding directory called {}'.format(imagic_pretrained_path))
 
 
-def upload_embeds(path,file, CLIP_model_name,alpha, device,SD_pretrained=None):
+def upload_embeds(path,file, CLIP_model_name,alpha, device,Imagic_pipe,SD_pretrained=None):
     all_embeds ={}
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     imagic_parameters = upload_single_imagic_params(path, file, CLIP_model_name,
-                                                                    device)
-    pipeline, target_embeddings, optimized_embeddings = imagic_parameters
+                                                                    device,Imagic_pipe)
+
     if SD_pretrained is not None:
         pipeline = SD_pipeline.StableDiffusionPipeline(*SD_pretrained)
-
+        _,target_embeddings, optimized_embeddings = imagic_parameters
+    else:
+        pipeline, target_embeddings, optimized_embeddings = imagic_parameters
     embeddings = alpha * target_embeddings + (1 - alpha) * optimized_embeddings
     all_embeds[file] = pipeline, embeddings
     return all_embeds
 
-def upload_cat_embeds(path, CLIP_model_name, device,SD_pipe=None):
+def upload_cat_embeds(path, CLIP_model_name, device,Imagic_pipe,SD_pipe=None):
     final_embeds = {}
     embeddings = {}
 
@@ -157,7 +163,7 @@ def upload_cat_embeds(path, CLIP_model_name, device,SD_pipe=None):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device)
+        Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device,Imagic_pipe)
         _, target_embeddings, optimized_embeddings = Imagic_params
         pipeline =SD_pipe
 
