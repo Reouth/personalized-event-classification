@@ -217,7 +217,8 @@ class StableDiffusionPipeline(DiffusionPipeline):
 
             loss = F.mse_loss(noise_pred.float(), noise.float(), reduction="mean")
             loss_avg.update(loss.detach_(), bsz)
-            noisy_latents = self.scheduler.step(noise_pred, t, noisy_latents)['prev_sample']
+            if generate:
+                noisy_latents = self.scheduler.step(noise_pred, t, noisy_latents)['prev_sample']
         return loss_avg, noisy_latents
 
     def generateImage(self,

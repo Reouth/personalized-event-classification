@@ -1,32 +1,67 @@
 import pandas as pd
+import os
 
+def topk_cls_pred(df, k, correct_class, pred_column, loss, ascend, avg=True):
+    df1 = df.groupby("GT Image name")
+    # df1=df.groupby("Image name")
 
-def calculate_top_k_accuracy(csv_path, correct_class_col, pred_class_col, loss_col, k,down):
-    df = pd.read_csv(csv_path)
-    cls = csv_path.rsplit("/",1)[1].rsplit("_results",1)[0]
-    correct, counts = 0, 0
-    group_accuracies = {}
+    count = 0
+    correct = 0
 
-    grouped = df.groupby(correct_class_col)
-
-    # Iterate over each group
-    for image_id, group in grouped:
-
-        group = group.sort_values(by=loss_col, ascending=down)
-        top_k_predictions = group[pred_class_col].head(k).tolist()
-        correct_class = group[correct_class_col].iloc[0]
-        if correct_class in top_k_predictions:
-            group_correct = 1
-            correct += 1
+    for _, test_image in df1:
+        if avg:
+            grouped = test_image.groupby(pred_column)[loss].mean()
+            sorted_group = grouped.sort_values(ascending=ascend)
+            top_k_pred = sorted_group.head(k).index.tolist()
         else:
-            group_correct = 0
+            sorted_group = test_image.sort_values(by=loss, ascending=ascend)
+            top_k_pred = sorted_group.head(k)[pred_column].tolist()
 
-        counts += 1
+        lowercase_set = {s.lower() for s in top_k_pred}
+        count += 1
+        if correct_class.lower() in lowercase_set:
+            correct += 1
+    top_k_percentage = (correct / count) * 100
+    return top_k_percentage
 
-        # Store the accuracy for the current group
-        group_accuracies[image_id] = group_correct * 100
+def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
+    if avg:
+        avg_name = 'avg'
+    else:
+        avg_name = ""
 
-    # Calculate the total top-k accuracy
-    total_top_k_accuracy = (correct / counts) * 100
+    if clip_csv:
+        ascend = False
+        input_pred = 'input_CLIP_embeds'
+        loss = 'CLIP_loss'
+        model_name = "CLIP_MODEL"
+    else:
+        ascend = True
+        input_pred = 'input_SD_embeds'
+        # input_pred = 'input_SD'
+        loss = "SD_loss"
+        model_name = "SD_MODEL"
+    for k in k_range:
+        top_k_all = 0
+        count = 0
+        results = []
+        for csv in csvs:
+            GT_cls = str(csv).rsplit("/", 1)[1].rsplit("_results", 1)[0]
+            # GT_cls = str(csv).rsplit("/",1)[1].split("_",1)[0].replace(" ","_")
+            print(GT_cls)
+            df = pd.read_csv(csv)
+            df[pred_column] = df[input_pred].apply(lambda x: x.rsplit('_', 1)[0])
+            # df[pred_column] = df[input_pred].apply(process_value)
 
-    return group_accuracies, total_top_k_accuracy
+            top_k = topk_cls_pred(df, k, GT_cls, pred_column, loss, ascend, avg)
+            print("{} predicted for TOP {} accuracy : {}".format(GT_cls, k, top_k))
+            results.append({"GT_cls": GT_cls, "Top_k_accuracy": top_k})
+            top_k_all += top_k
+            count += 1
+        top_k_all = top_k_all / count
+        print("MODEL TOP {} ACCURACY {}".format(k, top_k_all))
+        results.append({"GT_cls": model_name, "Top_k_accuracy": top_k_all})
+        results_df = pd.DataFrame(results)
+        results_path = os.path.join(results_folder, "top_{}_{}_accuracy_results.csv".format(k, avg_name))
+        results_df.to_csv(results_path, index=False)
+        return results_df
