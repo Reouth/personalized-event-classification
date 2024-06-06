@@ -1,6 +1,12 @@
 import pandas as pd
 import os
 
+
+def process_value(x):
+    if x.rsplit('_', 1)[-1].isdigit():  # Check if the part after the last underscore is a digit
+        return x.rsplit('_', 1)[0].replace('tinaa', 'Tina')
+    return x
+
 def topk_cls_pred(df, k, correct_class, pred_column, loss, ascend, avg=True):
     df1 = df.groupby("GT Image name")
     # df1=df.groupby("Image name")
@@ -42,6 +48,7 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
         loss = "SD_loss"
         model_name = "SD_MODEL"
     for k in k_range:
+        print(k)
         top_k_all = 0
         count = 0
         results = []
@@ -54,7 +61,7 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
             # df[pred_column] = df[input_pred].apply(process_value)
 
             top_k = topk_cls_pred(df, k, GT_cls, pred_column, loss, ascend, avg)
-            print("{} predicted for TOP {} accuracy : {}".format(GT_cls, k, top_k))
+            # print("{} predicted for TOP {} accuracy : {}".format(GT_cls, k, top_k))
             results.append({"GT_cls": GT_cls, "Top_k_accuracy": top_k})
             top_k_all += top_k
             count += 1
@@ -64,4 +71,3 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
         results_df = pd.DataFrame(results)
         results_path = os.path.join(results_folder, "top_{}_{}_accuracy_results.csv".format(k, avg_name))
         results_df.to_csv(results_path, index=False)
-        return results_df
