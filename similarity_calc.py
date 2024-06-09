@@ -8,8 +8,8 @@ def process_value(x):
     return x
 
 def topk_cls_pred(df, k, correct_class, pred_column, loss, ascend, avg=True):
-    df1 = df.groupby("GT Image name")
-    # df1=df.groupby("Image name")
+    # df1 = df.groupby("GT Image name")
+    df1=df.groupby("Image name")
 
     count = 0
     correct = 0
@@ -43,8 +43,8 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
         model_name = "CLIP_MODEL"
     else:
         ascend = True
-        input_pred = 'input_SD_embeds'
-        # input_pred = 'input_SD'
+        # input_pred = 'input_SD_embeds'
+        input_pred = 'input_SD'
         loss = "SD_loss"
         model_name = "SD_MODEL"
     for k in k_range:
@@ -53,13 +53,13 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
         count = 0
         results = []
         for csv in csvs:
-            GT_cls = str(csv).rsplit("/", 1)[1].rsplit("_results", 1)[0]
-            # GT_cls = str(csv).rsplit("/",1)[1].split("_",1)[0].replace(" ","_")
+            # GT_cls = str(csv).rsplit("/", 1)[1].rsplit("_results", 1)[0]
+            GT_cls = str(csv).rsplit("/",1)[1].split("_a photo",1)[0].replace(" ","_")
             print(GT_cls)
             df = pd.read_csv(csv)
-            df[pred_column] = df[input_pred].apply(lambda x: x.rsplit('_', 1)[0])
+            # df[pred_column] = df[input_pred].apply(lambda x: x.rsplit('_', 1)[0])
             # df[pred_column] = df[input_pred].apply(process_value)
-
+            df[pred_column] = df[input_pred].apply(lambda x: x.replace(' ', '_'))
             top_k = topk_cls_pred(df, k, GT_cls, pred_column, loss, ascend, avg)
             # print("{} predicted for TOP {} accuracy : {}".format(GT_cls, k, top_k))
             results.append({"GT_cls": GT_cls, "Top_k_accuracy": top_k})
