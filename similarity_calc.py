@@ -26,8 +26,10 @@ def topk_cls_pred(df, k, correct_class, pred_column, loss, ascend, avg=True):
         lowercase_set = {s.lower() for s in top_k_pred}
         print("correct_class {} in lower case set {}".format(correct_class, lowercase_set))
         count += 1
+        print(count)
         if correct_class.lower() in lowercase_set:
             correct += 1
+            print('correct{}'.format(correct))
     top_k_percentage = (correct / count) * 100
     return top_k_percentage
 
