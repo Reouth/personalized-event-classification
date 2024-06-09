@@ -22,8 +22,9 @@ def topk_cls_pred(df, k, correct_class, pred_column, loss, ascend, avg=True):
         else:
             sorted_group = test_image.sort_values(by=loss, ascending=ascend)
             top_k_pred = sorted_group.head(k)[pred_column].tolist()
-
+        print(sorted_group)
         lowercase_set = {s.lower() for s in top_k_pred}
+        print("correct_class {} in lower case set {}".format(correct_class, lowercase_set))
         count += 1
         if correct_class.lower() in lowercase_set:
             correct += 1
