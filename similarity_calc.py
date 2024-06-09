@@ -61,6 +61,7 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
             # df[pred_column] = df[input_pred].apply(process_value)
             df[pred_column] = df[input_pred].apply(lambda x: x.replace(' ', '_'))
             top_k = topk_cls_pred(df, k, GT_cls, pred_column, loss, ascend, avg)
+            print(top_k)
             # print("{} predicted for TOP {} accuracy : {}".format(GT_cls, k, top_k))
             results.append({"GT_cls": GT_cls, "Top_k_accuracy": top_k})
             top_k_all += top_k
