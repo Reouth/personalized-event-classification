@@ -36,6 +36,7 @@ def topk_cls_pred(df, k, correct_class, pred_column, loss, ascend, avg=True):
 def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
     if avg:
         avg_name = 'avg'
+        input_pred = ''
     else:
         avg_name = ""
 
@@ -60,9 +61,9 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
             GT_cls = str(csv).rsplit("/",1)[1].split("_a photo",1)[0].replace(" ","_")
             print(GT_cls)
             df = pd.read_csv(csv)
-            # df[pred_column] = df[input_pred].apply(lambda x: x.rsplit('_', 1)[0])
+            df[pred_column] = df[input_pred].apply(lambda x: x.rsplit('_', 1)[0])
             # df[pred_column] = df[input_pred].apply(process_value)
-            df[pred_column] = df[input_pred].apply(lambda x: x.replace(' ', '_'))
+            # df[pred_column] = df[input_pred].apply(lambda x: x.replace(' ', '_'))
             top_k = topk_cls_pred(df, k, GT_cls, pred_column, loss, ascend, avg)
             print(top_k)
             # print("{} predicted for TOP {} accuracy : {}".format(GT_cls, k, top_k))
