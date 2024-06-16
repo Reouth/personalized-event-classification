@@ -41,7 +41,7 @@ class AverageMeter:
         self.avg = self.sum / self.count
 
 
-class ChecksStableDiffusionPipeline(DiffusionPipeline):
+class StableDiffusionPipeline(DiffusionPipeline):
     r"""
     Pipeline for imagic image editing.
     See paper here: https://arxiv.org/pdf/2210.09276.pdf
