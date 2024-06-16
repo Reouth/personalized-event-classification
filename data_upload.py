@@ -1,7 +1,7 @@
 import os
 from PIL import Image
 import SD_model
-import SD_pipeline
+import new_SD_pipline
 import torch
 import gc
 import pathlib
@@ -123,7 +123,7 @@ def upload_single_imagic_params(path,embeds_file,CLIP_model_name,device,Imagic_p
         if Imagic_pipe:
             pretrained_models = SD_model.SD_pretrained_load(imagic_pretrained_path, CLIP_model_name, device,
                                                             True)
-            pipeline = SD_pipeline.StableDiffusionPipeline(*pretrained_models)
+            pipeline = new_SD_pipline.StableDiffusionPipeline(*pretrained_models)
         else:
             pipeline =None
         target_embeddings = torch.load(os.path.join(imagic_pretrained_path, "target_embeddings.pt")).to(device)
@@ -144,7 +144,7 @@ def upload_embeds(path,file, CLIP_model_name,alpha, device,Imagic_pipe,SD_pretra
                                                                     device,Imagic_pipe)
 
     if SD_pretrained is not None:
-        pipeline = SD_pipeline.StableDiffusionPipeline(*SD_pretrained)
+        pipeline = new_SD_pipline.StableDiffusionPipeline(*SD_pretrained)
         _,target_embeddings, optimized_embeddings = imagic_parameters
     else:
         pipeline, target_embeddings, optimized_embeddings = imagic_parameters

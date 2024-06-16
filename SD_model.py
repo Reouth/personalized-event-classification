@@ -11,7 +11,8 @@ import os
 import gc
 import data_upload
 import helper_functions
-import SD_pipeline
+# import SD_pipeline
+import new_SD_pipline
 
 
 def SD_pretrained_load(SD_MODEL_NAME,CLIP_MODEL_NAME,device,imagic_trained =False):
@@ -97,7 +98,7 @@ def image_generator(output_folder,imagic_parameters,image_name,cat_embeds=None,S
 
 
     if SD_pretrained_models is not None:
-        pipeline = SD_pipeline.StableDiffusionPipeline(*SD_pretrained_models)
+        pipeline = new_SD_pipline.StableDiffusionPipeline(*SD_pretrained_models)
         _, target_embeddings, optimized_embeddings = imagic_parameters
     else:
         pipeline, target_embeddings, optimized_embeddings = imagic_parameters
@@ -132,8 +133,18 @@ def conditioned_classifier(parameters,test_image,
         pipeline, embeddings = params
 
         with torch.autocast("cuda"), torch.inference_mode():
-            loss_avg = pipeline.conditioned_diffusion_loss(
-                cond_embeddings=embeddings,
+            # loss_avg = pipeline.conditioned_diffusion_loss(
+            #     cond_embeddings=embeddings,
+            #     image=test_image.convert('RGB'),
+            #     seed=seed,
+            #     height=height,
+            #     width=width,
+            #     resolution=resolution,
+            #     num_inference_steps=num_inference_steps,
+            #     guidance_scale=guidance_scale
+            #
+            loss_avg = pipeline.diffusionloss_IM_IM(
+                image_ID_embeddings=embeddings,
                 image=test_image.convert('RGB'),
                 seed=seed,
                 height=height,
