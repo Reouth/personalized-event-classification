@@ -111,17 +111,12 @@ class StableDiffusionPipeline(DiffusionPipeline):
 
     @torch.no_grad()
     def generateImage(self,
-        text_embeddings,
+        cond_embeddings,
         seed:int=0,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
         num_inference_steps: Optional[int] = 50,
-        generator: Optional[torch.Generator] = None,
-        output_type: Optional[str] = "pil",
-        return_dict: bool = True,
         guidance_scale: float = 7.5,
-        eta: float = 0.0,
-        **kwargs
     ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -199,7 +194,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             # For classifier free guidance, we need to do two forward passes.
             # Here we concatenate the unconditional and text embeddings into a single batch
             # to avoid doing two forward passes
-            text_embeddings = torch.cat([uncond_embeddings, text_embeddings])
+            text_embeddings = torch.cat([uncond_embeddings, cond_embeddings])
 
         # get the initial random noise unless the user supplied it
 
@@ -264,11 +259,6 @@ class StableDiffusionPipeline(DiffusionPipeline):
         #     )
         # else:
         #     has_nsfw_concept = None
-
-        if output_type == "pil":
-            # image = self.numpy_to_pil(image)
-            images = (images * 255).round().astype('uint8')
-            images = [Image.fromarray(image) for image in images]
 
         return images
 
