@@ -116,6 +116,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
         height: Optional[int] = 512,
         width: Optional[int] = 512,
         num_inference_steps: Optional[int] = 50,
+        output_type: Optional[str] = "pil",
         guidance_scale: float = 7.5,
     ):
         r"""
@@ -259,7 +260,10 @@ class StableDiffusionPipeline(DiffusionPipeline):
         #     )
         # else:
         #     has_nsfw_concept = None
-
+        if output_type == "pil":
+            # image = self.numpy_to_pil(image)
+            images = (images * 255).round().astype('uint8')
+            images = [Image.fromarray(image) for image in images]
         return images
 
 
