@@ -96,10 +96,31 @@ def generated_image_checkpoint(image_path,embeds_name,alpha,guidance_scale):
     flag, item_path = image_check(category_folder, image_name)
     return flag, item_path,image_name
 
+
 def image_check(base_path, image_name):
     item_path = os.path.join(base_path, image_name)
     flag = False
-    if data_upload.is_image(item_path):
-        flag = True
-    return flag,item_path
 
+    # Check if the file exists before further checks
+    if os.path.exists(item_path):
+        # Debug statement to confirm the file's existence
+        print("File exists: {}".format(item_path))
+        if data_upload.is_image(item_path):
+            flag = True
+            # Debug statement to confirm the file is recognized as an image
+            print("File is an image: {}".format(item_path))
+        else:
+            # Debug statement if the file is not recognized as an image
+            print("File is not an image: {}".format(item_path))
+    else:
+        # Debug statement if the file does not exist
+        print("File does not exist: {}".format(item_path))
+
+    return flag, item_path
+# def image_check(base_path, image_name):
+#     item_path = os.path.join(base_path, image_name)
+#     flag = False
+#     if data_upload.is_image(item_path):
+#         flag = True
+#     return flag,item_path
+#
