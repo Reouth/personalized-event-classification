@@ -74,3 +74,31 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
         results_df = pd.DataFrame(results)
         results_path = os.path.join(results_folder, "top_{}_{}_accuracy_results.csv".format(k, avg_name))
         results_df.to_csv(results_path, index=False)
+        
+def merge_csv_results(base_path,folders_names,output_dir):
+    # Get the list of csv files from the first folder (assuming all folders have the same csv files)
+    f1_path = os.path.join(base_path, folders_names[0])
+    csv_files = [f for f in os.listdir(f1_path) if f.endswith('.csv')]
+
+    # Dictionary to store dataframes for each csv file
+    csv_data = {csv_file: [] for csv_file in csv_files}
+
+    # Loop through each folder and each csv file
+    for folder in folders_names:
+        for csv_file in csv_files:
+            file_path = os.path.join(base_path, folder, csv_file)
+            df = pd.read_csv(file_path)
+            last_row = df.iloc[-1]
+            last_row['folder_name'] = folder  # Add the folder name as a new column
+            csv_data[csv_file].append(last_row)
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    for csv_file, rows in csv_data.items():
+        merged_df = pd.DataFrame(rows)
+        # Sort the dataframe by 'Top_k_accuracy' column in descending order
+        sorted_df = merged_df.sort_values(by='Top_k_accuracy', ascending=False)
+        output_path = os.path.join(output_dir, csv_file)
+        sorted_df.to_csv(output_path, index=False)
+
+    print("CSV files have been created with the last rows from each folder.")
