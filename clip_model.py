@@ -6,7 +6,6 @@ class CLIP_pipline():
        def __init__(self,device,model_name):
               self.model_CLIP, self.preprocess_CLIP = clip.load(model_name, device)
               self.device = device
-
        def image_to_embedding(self,
                image):
               CLIP_image = self.preprocess_CLIP(image).unsqueeze(0).to(self.device)

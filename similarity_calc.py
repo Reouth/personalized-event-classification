@@ -74,7 +74,7 @@ def csv_to_topk_results(avg,clip_csv,k_range,csvs,pred_column,results_folder):
         results_df = pd.DataFrame(results)
         results_path = os.path.join(results_folder, "top_{}_{}_accuracy_results.csv".format(k, avg_name))
         results_df.to_csv(results_path, index=False)
-        
+
 def merge_csv_results(base_path,folders_names,output_dir):
     # Get the list of csv files from the first folder (assuming all folders have the same csv files)
     f1_path = os.path.join(base_path, folders_names[0])

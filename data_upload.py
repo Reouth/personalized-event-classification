@@ -78,6 +78,7 @@ def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
 
             # Check if the total frames limit or class batch limit is reached
             if total_frames_count >= max_frames or image_counts[folder_name] >= class_batch:
+                print("{} frames in {} class".format(image_counts[folder_name]),folder_name)
                 return image_data
 
             image_counts[folder_name] += 1
