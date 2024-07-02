@@ -31,16 +31,6 @@ def is_image(file_path):
         return False
 
 
-import os
-import numpy as np
-from PIL import Image
-
-
-def is_image(file_path):
-    """Check if a file is an image based on its extension."""
-    valid_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.gif']
-    return any(file_path.lower().endswith(ext) for ext in valid_extensions)
-
 
 def upload_images(base_path, class_batch=float('inf'), max_frames=float('inf')):
     """Recursively load images with their new names into a list."""
@@ -153,7 +143,7 @@ def upload_embeds(path,file, CLIP_model_name,alpha, device,Imagic_pipe,SD_pretra
     all_embeds[file] = pipeline, embeddings
     return all_embeds
 
-def upload_cat_embeds(path, CLIP_model_name, device,Imagic_pipe,SD_pipe=None):
+def upload_cat_embeds(path, CLIP_model_name, device,Imagic_pipe,SD_pipe):
     final_embeds = {}
     embeddings = {}
 
