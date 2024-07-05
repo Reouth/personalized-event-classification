@@ -171,6 +171,7 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
     else:
         pipe_name = 'SD_pipeline'
         SD_pretrained_model = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
+        print(type(SD_pretrained_model))
         if category_class:
             pipe_name = 'SD_embeds_cat_avg'
             cat_files = data_upload.upload_cat_embeds(imagic_pretrained_path, CLIP_model_name, device,Imagic_pipe, SD_pretrained_model)
@@ -181,8 +182,8 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
         if category_class:
             embeds_files = {file:cat_files[file]}
             print(embeds_files.keys())
-            print(len(cat_files[file]))
-            print(len(embeds_files[file]))
+            print(type(cat_files[file][0]))
+            print(type(embeds_files[file][0]))
         else:
 
             embeds_files = data_upload.upload_embeds(imagic_pretrained_path,file, CLIP_model_name,alpha, device,Imagic_pipe,

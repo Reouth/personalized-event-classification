@@ -157,7 +157,7 @@ def upload_cat_embeds(path, CLIP_model_name, device,Imagic_pipe,SD_pipe):
         Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device,Imagic_pipe)
         _, target_embeddings, optimized_embeddings = Imagic_params
         pipeline =SD_pipe
-
+        print(type(pipeline))
         if embeds_category in embeddings:
             existing_target_embeds, existing_optimized_embeds, count = embeddings[embeds_category]
             embeddings[embeds_category] = (
@@ -171,7 +171,7 @@ def upload_cat_embeds(path, CLIP_model_name, device,Imagic_pipe,SD_pipe):
     for cat, params in embeddings.items():
         total_target_embeds, total_optimized_embeds, count = params
         embeddings = (total_target_embeds + total_optimized_embeds) / count
-        final_embeds[cat] =  (pipeline, embeddings)
+        final_embeds[cat] =  pipeline, embeddings
 
     return final_embeds
 
