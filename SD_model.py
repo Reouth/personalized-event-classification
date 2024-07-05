@@ -180,7 +180,7 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
         if category_class:
             embeds_files = {file:cat_files[file]}
             print(embeds_files.keys())
-            print(embeds_files.values())
+            print(len(embeds_files.values()))
         else:
 
             embeds_files = data_upload.upload_embeds(imagic_pretrained_path,file, CLIP_model_name,alpha, device,Imagic_pipe,
