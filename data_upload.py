@@ -171,7 +171,7 @@ def upload_cat_embeds(path, CLIP_model_name, device,Imagic_pipe,SD_pipe):
     for cat, params in embeddings.items():
         total_target_embeds, total_optimized_embeds, count = params
         embeddings = (total_target_embeds + total_optimized_embeds) / count
-        final_embeds[cat] =  pipeline, embeddings
+        final_embeds[cat] =  (pipeline, embeddings)
 
     return final_embeds
 
