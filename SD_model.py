@@ -180,10 +180,10 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
             all_files = set(os.listdir(imagic_pretrained_path))
     for file in all_files:
         if category_class:
-            embeds_files = {file:cat_files[file]}
-            print(embeds_files.keys())
-            print(type(cat_files[file][0]))
-            print(type(embeds_files[file][0]))
+            embeds_files = {file:(SD_pretrained_model,cat_files[file][1])}
+            # print(embeds_files.keys())
+            # print(type(cat_files[file][0]))
+            # print(type(embeds_files[file][0]))
         else:
 
             embeds_files = data_upload.upload_embeds(imagic_pretrained_path,file, CLIP_model_name,alpha, device,Imagic_pipe,
