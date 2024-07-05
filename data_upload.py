@@ -156,8 +156,8 @@ def upload_cat_embeds(path, CLIP_model_name, device,Imagic_pipe,SD_pipe):
 
         Imagic_params = upload_single_imagic_params(path, embeds, CLIP_model_name, device,Imagic_pipe)
         _, target_embeddings, optimized_embeddings = Imagic_params
-        pipeline =SD_pipe
-        print(type(pipeline))
+        pipeline = new_SD_pipline.StableDiffusionPipeline(*SD_pipe)
+
         if embeds_category in embeddings:
             existing_target_embeds, existing_optimized_embeds, count = embeddings[embeds_category]
             embeddings[embeds_category] = (

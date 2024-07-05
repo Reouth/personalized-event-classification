@@ -132,7 +132,7 @@ def conditioned_classifier(parameters,test_image,
     for embeds_name,params in parameters.items():
         pipeline, embeddings = params
         print(len(params))
-        print(len(pipeline))
+        print(type(pipeline))
         with torch.autocast("cuda"), torch.inference_mode():
             # loss_avg = pipeline.conditioned_diffusion_loss(
             #     cond_embeddings=embeddings,
@@ -180,7 +180,7 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
             all_files = set(os.listdir(imagic_pretrained_path))
     for file in all_files:
         if category_class:
-            embeds_files = {file:(SD_pretrained_model,cat_files[file][1])}
+            embeds_files = {file:cat_files[file]}
             # print(embeds_files.keys())
             # print(type(cat_files[file][0]))
             # print(type(embeds_files[file][0]))
