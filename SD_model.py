@@ -167,7 +167,7 @@ def all_embeds_conditioned_classifier(imagic_pretrained_path,csv_folder,SD_model
     if Imagic_pipe:
         pipe_name = 'Imagic_pipeline'
         SD_pretrained_model = None
-
+        all_files = set(os.listdir(imagic_pretrained_path))
     else:
         pipe_name = 'SD_pipeline'
         SD_pretrained_model = SD_pretrained_load(SD_model_name, CLIP_model_name, device)
