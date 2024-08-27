@@ -4,6 +4,9 @@ import pandas as pd
 import os
 import shutil
 
+import os
+import shutil
+
 
 def move_csv_files(source_dir, destination_dir):
     # Check if source directory exists
@@ -17,37 +20,36 @@ def move_csv_files(source_dir, destination_dir):
 
     # Check if the source path is a directory
     if os.path.isdir(source_dir):
-        has_csv = False
-
         # Iterate through the files and subdirectories in the source directory
         for root, dirs, files in os.walk(source_dir):
+            # Construct the relative path from the source directory to the current folder
+            relative_path = os.path.relpath(root, source_dir)
+
+            # Create a new folder name by including the relative path in the destination directory
+            path_parts = relative_path.split(os.sep)
+            new_folder_name = "_".join(path_parts)
+            new_destination = os.path.join(destination_dir, new_folder_name)
+
+            # Create the new destination folder if it doesn't exist
+            if not os.path.exists(new_destination):
+                os.makedirs(new_destination)
+
+            # Move all CSV files in the current directory to the new destination folder
+            has_csv = False
             for filename in files:
                 if filename.endswith('.csv'):
                     has_csv = True
-
-                    # Construct the relative path from the source directory to the file
-                    relative_path = os.path.relpath(root, source_dir)
-
-                    # Create a new folder name by including the relative path and using it in the destination directory
-                    path_parts = relative_path.split(os.sep)
-                    new_folder_name = "_".join(path_parts)
-                    new_destination = os.path.join(destination_dir, new_folder_name)
-
-                    # Create the new destination folder if it doesn't exist
-                    if not os.path.exists(new_destination):
-                        os.makedirs(new_destination)
-
-                    # Move the file to the new destination folder with the original filename
                     shutil.move(os.path.join(root, filename), os.path.join(new_destination, filename))
                     print(f"Moved: {filename} to {new_destination}")
 
-        if not has_csv:
-            print(f"No CSV files found in the directory '{source_dir}'.")
+            if not has_csv:
+                print(f"No CSV files in '{relative_path}', but folder structure created.")
 
     else:
         print(f"The path '{source_dir}' is not a directory.")
 
     print("Operation completed.")
+
 
 
 
