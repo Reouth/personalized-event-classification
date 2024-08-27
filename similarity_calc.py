@@ -1,6 +1,43 @@
 import pandas as pd
 import os
 
+import os
+import shutil
+
+def move_csv_files(source_dir, destination_dir):
+    # Check if source directory exists
+    if not os.path.exists(source_dir):
+        print(f"The source directory '{source_dir}' does not exist.")
+        return
+
+    # Check if destination directory exists; if not, create it
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
+
+    # Check if the source path is a directory
+    if os.path.isdir(source_dir):
+        has_csv = False
+
+        # Iterate through the files in the source directory
+        for filename in os.listdir(source_dir):
+            file_path = os.path.join(source_dir, filename)
+
+            # Check if the current item is a file and has a .csv extension
+            if os.path.isfile(file_path) and filename.endswith('.csv'):
+                has_csv = True
+                # Move the file to the destination directory
+                shutil.move(file_path, destination_dir)
+                print(f"Moved: {filename}")
+
+        if not has_csv:
+            print(f"No CSV files found in the directory '{source_dir}'.")
+
+    else:
+        print(f"The path '{source_dir}' is not a directory.")
+
+    print("Operation completed.")
+
+
 
 def process_value(x):
     if x.rsplit('_', 1)[-1].isdigit():  # Check if the part after the last underscore is a digit
