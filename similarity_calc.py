@@ -1,9 +1,9 @@
 import pandas as pd
 
 
+
 import os
 import shutil
-
 
 def move_csv_files(source_dir, destination_dir):
     # Check if source directory exists
@@ -15,7 +15,6 @@ def move_csv_files(source_dir, destination_dir):
     if not os.path.exists(destination_dir):
         os.makedirs(destination_dir)
 
-    # Recursive function to process directories
     def process_directory(current_dir, folder_name_prefix):
         # Iterate through items in the current directory
         for item in os.listdir(current_dir):
@@ -23,7 +22,7 @@ def move_csv_files(source_dir, destination_dir):
 
             if os.path.isdir(item_path):
                 # If item is a directory, append its name to the folder_name_prefix and recurse
-                new_prefix = folder_name_prefix + "_" + item if folder_name_prefix else item
+                new_prefix = f"{folder_name_prefix}_{item}" if folder_name_prefix else item
                 process_directory(item_path, new_prefix)
             elif item.endswith('.csv'):
                 # If a CSV file is found, move it to the destination with the folder structure
@@ -37,6 +36,8 @@ def move_csv_files(source_dir, destination_dir):
     process_directory(source_dir, "")
 
     print("Operation completed.")
+
+
 
 
 
