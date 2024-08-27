@@ -1,8 +1,5 @@
 import pandas as pd
-import os
 
-import os
-import shutil
 
 import os
 import shutil
@@ -31,15 +28,18 @@ def move_csv_files(source_dir, destination_dir):
                     # Construct the relative path from the source directory to the file
                     relative_path = os.path.relpath(root, source_dir)
 
-                    # Create a new filename by including the relative path and original file name
+                    # Create a new folder name by including the relative path and using it in the destination directory
                     path_parts = relative_path.split(os.sep)
-                    folder_path = "_".join(path_parts)
-                    new_filename = f"{folder_path}_{filename}" if folder_path else filename
-                    destination_path = os.path.join(destination_dir, new_filename)
+                    new_folder_name = "_".join(path_parts)
+                    new_destination = os.path.join(destination_dir, new_folder_name)
 
-                    # Move and rename the file to the destination directory
-                    shutil.move(os.path.join(root, filename), destination_path)
-                    print(f"Moved and renamed: {new_filename}")
+                    # Create the new destination folder if it doesn't exist
+                    if not os.path.exists(new_destination):
+                        os.makedirs(new_destination)
+
+                    # Move the file to the new destination folder with the original filename
+                    shutil.move(os.path.join(root, filename), os.path.join(new_destination, filename))
+                    print(f"Moved: {filename} to {new_destination}")
 
         if not has_csv:
             print(f"No CSV files found in the directory '{source_dir}'.")
@@ -48,6 +48,7 @@ def move_csv_files(source_dir, destination_dir):
         print(f"The path '{source_dir}' is not a directory.")
 
     print("Operation completed.")
+
 
 
 def process_value(x):
