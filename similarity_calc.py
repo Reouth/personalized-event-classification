@@ -4,6 +4,10 @@ import os
 import os
 import shutil
 
+import os
+import shutil
+
+
 def move_csv_files(source_dir, destination_dir):
     # Check if source directory exists
     if not os.path.exists(source_dir):
@@ -18,16 +22,24 @@ def move_csv_files(source_dir, destination_dir):
     if os.path.isdir(source_dir):
         has_csv = False
 
-        # Iterate through the files in the source directory
-        for filename in os.listdir(source_dir):
-            file_path = os.path.join(source_dir, filename)
+        # Iterate through the files and subdirectories in the source directory
+        for root, dirs, files in os.walk(source_dir):
+            for filename in files:
+                if filename.endswith('.csv'):
+                    has_csv = True
 
-            # Check if the current item is a file and has a .csv extension
-            if os.path.isfile(file_path) and filename.endswith('.csv'):
-                has_csv = True
-                # Move the file to the destination directory
-                shutil.move(file_path, destination_dir)
-                print(f"Moved: {filename}")
+                    # Construct the relative path from the source directory to the file
+                    relative_path = os.path.relpath(root, source_dir)
+
+                    # Create a new filename by including the relative path and original file name
+                    path_parts = relative_path.split(os.sep)
+                    folder_path = "_".join(path_parts)
+                    new_filename = f"{folder_path}_{filename}" if folder_path else filename
+                    destination_path = os.path.join(destination_dir, new_filename)
+
+                    # Move and rename the file to the destination directory
+                    shutil.move(os.path.join(root, filename), destination_path)
+                    print(f"Moved and renamed: {new_filename}")
 
         if not has_csv:
             print(f"No CSV files found in the directory '{source_dir}'.")
@@ -36,7 +48,6 @@ def move_csv_files(source_dir, destination_dir):
         print(f"The path '{source_dir}' is not a directory.")
 
     print("Operation completed.")
-
 
 
 def process_value(x):
