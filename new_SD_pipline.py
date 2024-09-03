@@ -195,16 +195,18 @@ class StableDiffusionPipeline(DiffusionPipeline):
             # For classifier free guidance, we need to do two forward passes.
             # Here we concatenate the unconditional and text embeddings into a single batch
             # to avoid doing two forward passes
-            text_embeddings = torch.cat([uncond_embeddings, cond_embeddings])
+            embeddings = torch.cat([uncond_embeddings, cond_embeddings])
 
         # get the initial random noise unless the user supplied it
 
         # Unlike in other pipelines, latents need to be generated in the target device
         # for 1-to-1 results reproducibility with the CompVis implementation.
         # However this currently doesn't work in `mps`.
+        else:
+            embeddings = cond_embeddings
         latents_shape = (1, self.unet.in_channels, height // 8, width // 8)
         print(latents_shape)
-        latents_dtype = text_embeddings.dtype
+        latents_dtype = embeddings.dtype
         torch.manual_seed(seed)
         latents = torch.randn(latents_shape, dtype=latents_dtype)
         latents = latents.to(self.device)
@@ -235,7 +237,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             # print(latent_model_input.size())
             # print(text_embeddings.size())
             # predict the noise residual
-            noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)['sample']
+            noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=embeddings)['sample']
             # perform guidance
             if do_classifier_free_guidance:
                 noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
