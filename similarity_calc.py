@@ -1,42 +1,71 @@
+
 import pandas as pd
-from pathlib import Path
-
-
 import os
-import shutil
+import glob
 
-def move_csv_files(source_dir, destination_dir):
-    # Check if source directory exists
-    if not os.path.exists(source_dir):
-        print(f"The source directory '{source_dir}' does not exist.")
-        return
 
-    # Check if destination directory exists; if not, create it
-    if not os.path.exists(destination_dir):
-        os.makedirs(destination_dir)
+def extract_name(image_name):
+    # Remove the "_number.jpg" part to get the base name
+    return image_name.split('_')[0]
 
-    def process_directory(current_dir, folder_name_prefix):
-        # Iterate through items in the current directory
-        for item in os.listdir(current_dir):
-            item_path = os.path.join(current_dir, item)
 
-            if os.path.isdir(item_path):
-                # If item is a directory, append its name to the folder_name_prefix and recurse
-                new_prefix = f"{folder_name_prefix}_{item}" if folder_name_prefix else item
-                process_directory(item_path, new_prefix)
-            elif item.endswith('.csv'):
-                # If a CSV file is found, move it to the destination with the folder structure
-                destination_folder = os.path.join(destination_dir, folder_name_prefix)
-                if not os.path.exists(destination_folder):
-                    os.makedirs(destination_folder)
-                shutil.move(item_path, os.path.join(destination_folder, item))
-                print(f"Moved: {item} to {destination_folder}")
+def calculate_average_precision(query_id, df, gallery_ids):
+    # Initialize variables for precision and recall calculations
+    relevant_count = 0
+    precision_list = []
+    num_relevant = len(gallery_ids)  # Count of unique relevant gallery images
 
-    # Start the processing from the source directory with an empty prefix
-    prefix = Path(source_dir).name
-    process_directory(source_dir, prefix)
+    # Sort by score (assuming higher score means more similar)
+    df_sorted = df.sort_values(by='SD_loss', ascending=False)  # Use "SD_loss" column for scoring
 
-    print("Operation completed.")
+    for index, row in df_sorted.iterrows():
+        if row['gallery_id'] in gallery_ids:  # True positive
+            relevant_count += 1
+        precision = relevant_count / (index + 1)
+        precision_list.append(precision)
+
+    # Average Precision (AP)
+    ap = sum(precision_list) / num_relevant if num_relevant > 0 else 0
+    return ap
+
+
+def calculate_map_and_save_results(folder_path, output_file):
+    # Get all CSV files in the folder
+    csv_files = glob.glob(os.path.join(folder_path, '*.csv'))
+
+    # Initialize a dictionary to store gallery IDs for each query
+    query_gallery_dict = {}
+    ap_scores = {}
+
+    # Load gallery IDs for each query
+    for file in csv_files:
+        df = pd.read_csv(file)
+
+        # Extract the query name from the first entry in the GT image name column
+        query_id = extract_name(df['GT image name'].iloc[0])  # Assuming the first row's GT image name defines the query
+
+        # Extract gallery IDs and scores
+        df['gallery_id'] = df['Input_SD_embeds'].apply(extract_name)  # Extract gallery names
+        query_gallery_dict[query_id] = df[['gallery_id', 'SD_loss']]  # Use "SD_loss" as the score column
+
+    # Calculate mAP
+    average_precisions = []
+    for query_id, df in query_gallery_dict.items():
+        gallery_ids = df['gallery_id'].unique()
+        ap = calculate_average_precision(query_id, df, gallery_ids)
+        average_precisions.append(ap)
+        ap_scores[query_id] = ap  # Store AP for each query
+
+    # Mean Average Precision (mAP)
+    map_value = sum(average_precisions) / len(average_precisions) if average_precisions else 0
+
+    # Save results to CSV
+    results_df = pd.DataFrame(list(ap_scores.items()), columns=['query_id', 'average_precision'])
+    results_df.loc[len(results_df)] = ['Mean Average Precision (mAP)', map_value]  # Add mAP in last row
+    results_df.to_csv(output_file, index=False)
+
+    return map_value
+
 
 
 
