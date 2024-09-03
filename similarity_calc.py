@@ -1,9 +1,5 @@
 import pandas as pd
-
-
-
-import os
-import shutil
+from pathlib import Path
 
 
 import os
@@ -37,45 +33,10 @@ def move_csv_files(source_dir, destination_dir):
                 print(f"Moved: {item} to {destination_folder}")
 
     # Start the processing from the source directory with an empty prefix
-    process_directory(source_dir, "")
+    prefix = Path(source_dir).name
+    process_directory(source_dir, prefix)
 
     print("Operation completed.")
-
-# #
-#
-# def move_csv_files(source_dir, destination_dir):
-#     # Check if source directory exists
-#     if not os.path.exists(source_dir):
-#         print(f"The source directory '{source_dir}' does not exist.")
-#         return
-#
-#     # Check if destination directory exists; if not, create it
-#     if not os.path.exists(destination_dir):
-#         os.makedirs(destination_dir)
-#
-#     def process_directory(current_dir, folder_name_prefix):
-#         # Iterate through items in the current directory
-#         for item in os.listdir(current_dir):
-#             item_path = os.path.join(current_dir, item)
-#
-#             if os.path.isdir(item_path):
-#                 # If item is a directory, append its name to the folder_name_prefix and recurse
-#                 new_prefix = f"{folder_name_prefix}_{item}" if folder_name_prefix else item
-#                 process_directory(item_path, new_prefix)
-#             elif item.endswith('.csv'):
-#                 # If a CSV file is found, move it to the destination with the folder structure
-#                 destination_folder = os.path.join(destination_dir, folder_name_prefix)
-#                 if not os.path.exists(destination_folder):
-#                     os.makedirs(destination_folder)
-#                 shutil.move(item_path, os.path.join(destination_folder, item))
-#                 print(f"Moved: {item} to {destination_folder}")
-#
-#     # Start the processing from the source directory with an empty prefix
-#     process_directory(source_dir, "")
-#
-#     print("Operation completed.")
-
-
 
 
 
