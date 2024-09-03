@@ -16,7 +16,7 @@ def calculate_average_precision(query_id, df, gallery_ids):
     num_relevant = len(gallery_ids)  # Count of unique relevant gallery images
 
     # Sort by score (assuming higher score means more similar)
-    df_sorted = df.sort_values(by='SD_loss', ascending=False)  # Use "SD_loss" column for scoring
+    df_sorted = df.sort_values(by="SD_loss", ascending=False)  # Use "SD_loss" column for scoring
 
     for index, row in df_sorted.iterrows():
         if row['gallery_id'] in gallery_ids:  # True positive
@@ -42,11 +42,11 @@ def calculate_map_and_save_results(folder_path, output_file):
         df = pd.read_csv(file)
 
         # Extract the query name from the first entry in the GT image name column
-        query_id = extract_name(df['GT image name'].iloc[0])  # Assuming the first row's GT image name defines the query
+        query_id = extract_name(df["GT Image name"].iloc[0])  # Assuming the first row's GT image name defines the query
 
         # Extract gallery IDs and scores
-        df['gallery_id'] = df['Input_SD_embeds'].apply(extract_name)  # Extract gallery names
-        query_gallery_dict[query_id] = df[['gallery_id', 'SD_loss']]  # Use "SD_loss" as the score column
+        df['gallery_id'] = df['input_SD_embeds'].apply(extract_name)  # Extract gallery names
+        query_gallery_dict[query_id] = df[['gallery_id', "SD_loss"]]  # Use "SD_loss" as the score column
 
     # Calculate mAP
     average_precisions = []
