@@ -4,8 +4,22 @@ import os
 
 def calculate_average_precision(input_folder, output_folder, clip_csv=False):
     results = {}
+    all_query_ids = set()  # To track all query IDs
 
-    # Iterate through all CSV files in the input folder
+    # First pass: collect all query IDs across classes
+    for csv_file in os.listdir(input_folder):
+        if csv_file.endswith('.csv'):
+            df = pd.read_csv(os.path.join(input_folder, csv_file))
+            # Extract the query IDs and add to the set
+            query_ids = df['input_CLIP_embeds'].apply(lambda x: x.rsplit('_', 1)[0]).unique() if clip_csv else df[
+                'input_SD_embeds'].apply(lambda x: x.rsplit('_', 1)[0]).unique()
+            all_query_ids.update(query_ids)
+
+    # Initialize results for all query IDs
+    for query_id in all_query_ids:
+        results[query_id] = {'relevant': 0, 'total': 0}
+
+    # Second pass: iterate through all CSV files again for scoring
     for csv_file in os.listdir(input_folder):
         if csv_file.endswith('.csv'):
             df = pd.read_csv(os.path.join(input_folder, csv_file))
@@ -24,10 +38,6 @@ def calculate_average_precision(input_folder, output_folder, clip_csv=False):
 
                 top_query_id = top_query['input_CLIP_embeds'].rsplit('_', 1)[0] if clip_csv else \
                 top_query['input_SD_embeds'].rsplit('_', 1)[0]  # Extract query name without number
-
-                # Initialize counts for relevant and total matches
-                if top_query_id not in results:
-                    results[top_query_id] = {'relevant': 0, 'total': 0}
 
                 # Check if the top query matches the gallery class
                 if gt_image.startswith(top_query_id):  # Match in the same class
