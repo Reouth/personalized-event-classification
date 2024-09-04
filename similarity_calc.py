@@ -1,80 +1,61 @@
 import pandas as pd
 import os
-import glob
 
 
-def extract_name(image_name):
-    # Remove the "_number.jpg" part to get the base name
-    return image_name.rsplit('_', 1)[0]
+def calculate_average_precision(input_folder, output_folder, clip_csv=False):
+    results = {}
 
+    # Iterate through all CSV files in the input folder
+    for csv_file in os.listdir(input_folder):
+        if csv_file.endswith('.csv'):
+            df = pd.read_csv(os.path.join(input_folder, csv_file))
+            gallery_class = csv_file.split('_')[0]  # Extract the gallery class from the filename
+            print(f'Processing {gallery_class} class...')
 
-def calculate_average_precision(grouped_df, correct_class, loss, ascend=True):
-    # Sort by loss (ascending if distance-based, descending if similarity-based)
-    sorted_group = grouped_df.sort_values(by=loss, ascending=ascend)
-    gallery_ids = sorted_group['gallery_id'].unique()
+            # Group by GT Image name (the gallery images)
+            grouped_df = df.groupby("GT Image name")
 
-    # Calculate precision for each relevant item
-    relevant_count = 0
-    precision_list = []
-    num_relevant = len(gallery_ids)  # Number of unique relevant gallery images
+            for gt_image, group in grouped_df:
+                # Get the top query (the one with the best score)
+                if clip_csv:
+                    top_query = group.loc[group['CLIP_loss'].idxmax()]  # Use idxmax for CLIP
+                else:
+                    top_query = group.loc[group['SD_loss'].idxmin()]  # Use idxmin for SD
 
-    for index, row in sorted_group.iterrows():
-        if correct_class in row['gallery_id']:
-            relevant_count += 1
-            precision = relevant_count / (index + 1)
-            precision_list.append(precision)
+                top_query_id = top_query['input_CLIP_embeds'].rsplit('_', 1)[0] if clip_csv else \
+                top_query['input_SD_embeds'].rsplit('_', 1)[0]  # Extract query name without number
 
-    # Average Precision (AP)
-    ap = sum(precision_list) / num_relevant if num_relevant > 0 else 0
-    return ap
+                # Initialize counts for relevant and total matches
+                if top_query_id not in results:
+                    results[top_query_id] = {'relevant': 0, 'total': 0}
 
+                # Check if the top query matches the gallery class
+                if gt_image.startswith(top_query_id):  # Match in the same class
+                    results[top_query_id]['relevant'] += 1
 
-def calculate_map_and_save_results(folder_path, output_file, clip_csv=True, avg=True):
-    # Determine loss column and sorting order based on the type of CSV
-    if clip_csv:
-        loss = 'CLIP_loss'
-        ascend = False  # Sort descending for similarity scores
-        input_pred = 'input_CLIP_embeds'
-    else:
-        loss = 'SD_loss'
-        ascend = True  # Sort ascending for distance scores
-        input_pred = 'input_SD_embeds'
+                # Count total matches for the query across all classes
+                results[top_query_id]['total'] += 1
 
-    # Get all CSV files in the folder
-    csv_files = glob.glob(os.path.join(folder_path, '*.csv'))
+    # Calculate Average Precision for each query
+    ap_scores = {}
+    for query_id, counts in results.items():
+        ap = counts['relevant'] / counts['total'] if counts['total'] > 0 else 0
+        ap_scores[query_id] = ap
 
-    ap_scores = []
+    # Calculate Mean Average Precision (mAP)
+    map_score = sum(ap_scores.values()) / len(ap_scores) if ap_scores else 0
 
-    # Process each CSV file
-    for file in csv_files:
-        df = pd.read_csv(file)
+    # Create a DataFrame for results and save to CSV
+    results_df = pd.DataFrame(list(ap_scores.items()), columns=['query_id', 'average_precision'])
+    results_df.loc[len(results_df.index)] = ['mAP', map_score]
 
-        # Extract the query name from the GT image name column
-        df['query_id'] = df['GT Image name'].apply(extract_name)
-        df['gallery_id'] = df[input_pred].apply(extract_name)
+    # Ensure output folder exists
+    os.makedirs(output_folder, exist_ok=True)
 
-        # Group by the query
-        grouped_df = df.groupby('query_id')
+    # Save results to the output folder
+    results_df.to_csv(os.path.join(output_folder, 'average_precision_results.csv'), index=False)
 
-        # Calculate AP for each query
-        for query_id, group in grouped_df:
-            correct_class = query_id.lower()  # Correct class is the query_id
-            ap = calculate_average_precision(group, correct_class, loss, ascend)
-            ap_scores.append(ap)
-
-    # Mean Average Precision (mAP)
-    map_value = sum(ap_scores) / len(ap_scores) if ap_scores else 0
-
-    # Save results to CSV
-    results_df = pd.DataFrame({
-        'query_id': [query_id for query_id, _ in grouped_df],
-        'average_precision': ap_scores
-    })
-    results_df.loc[len(results_df)] = ['Mean Average Precision (mAP)', map_value]  # Add mAP in the last row
-    results_df.to_csv(output_file, index=False)
-
-    return map_value
-
+    return ap_scores, map_score
 
 
 def process_value(x):
