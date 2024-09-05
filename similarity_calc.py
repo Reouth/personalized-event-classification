@@ -163,8 +163,8 @@ def merge_csv_results(base_path,folders_names,output_dir):
     for csv_file, rows in csv_data.items():
         merged_df = pd.DataFrame(rows)
         # Sort the dataframe by 'Top_k_accuracy' column in descending order
-        sorted_df = merged_df.sort_values(by='Top_k_accuracy', ascending=False)
+        # sorted_df = merged_df.sort_values(by='Top_k_accuracy', ascending=False)
         output_path = os.path.join(output_dir, csv_file)
-        sorted_df.to_csv(output_path, index=False)
+        merged_df.to_csv(output_path, index=False)
 
     print("CSV files have been created with the last rows from each folder.")
