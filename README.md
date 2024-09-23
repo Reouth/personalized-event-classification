@@ -1,2 +1,10 @@
 # personalized-event-classification
 Open-set personalized zero-shot event classification
+## Abstract
+Character identification in movie scenes is a critical task for various applications in video understanding, such as story comprehension, tracking, and personalized content analysis. Traditional approaches primarily rely on deterministic models like multimodal CLIP, which excel at matching character identities in a zero-shot manner but face challenges when dealing with complex visual alterations. This thesis explores the application of generative diffusion models, typically used for image generation, for the discriminative task of character identification, offering a novel approach to handling complex movie scenes.
+
+We compare the performance of deterministic and generative models across multiple scenarios, evaluating their strengths and limitations. While deterministic models like CLIP show superior performance in traditional identification tasks, generative diffusion models prove to be effective in handling complex visual contexts, such as red-filtered scenes, particularly when prompt engineering is applied. By fine-tuning prompts to match specific scene characteristics, we demonstrate that generative models can adapt flexibly to scene variations, achieving competitive results at higher accuracy ranks (e.g., TOP3) where broader visual variations are present.
+
+The contributions of this work include the novel use of generative diffusion models for character identification and the creation of a new dataset that synchronizes movie frames with script and subtitle data. Additionally, this thesis provides a comprehensive comparison of the strengths of generative versus deterministic approaches, offering insights into how each model can be leveraged in various contexts.
+
+Overall, this research provides a deeper understanding of how both generative and deterministic models can be effectively used for character identification, opening new possibilities for advanced video understanding in movie analysis.
