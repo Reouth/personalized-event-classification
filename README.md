@@ -1,5 +1,5 @@
-# personalized-event-classification
-Open-set personalized zero-shot event classification
+# Movie character identificatio models
+comparison of generative diffusion based models with CLIP model forMovie character identification
 ## Abstract
 Character identification in movie scenes is a critical task for various applications in video understanding, such as story comprehension, tracking, and personalized content analysis. Traditional approaches primarily rely on deterministic models like multimodal CLIP, which excel at matching character identities in a zero-shot manner but face challenges when dealing with complex visual alterations. This thesis explores the application of generative diffusion models, typically used for image generation, for the discriminative task of character identification, offering a novel approach to handling complex movie scenes.
 
